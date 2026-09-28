@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { ReimbursementsView } from "@/components/reimbursements/reimbursements-view";
 
 export const metadata: Metadata = { title: "Reimbursements" };
 
-export default function Page() {
-  return <ComingSoon title="Reimbursements" phase={6} />;
+export default function ReimbursementsPage() {
+  return (
+    <Suspense>
+      <ReimbursementsView />
+    </Suspense>
+  );
 }

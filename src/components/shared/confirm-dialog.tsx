@@ -41,6 +41,7 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   destructive,
+  confirmDisabled,
   reason,
   children,
   onConfirm,
@@ -50,6 +51,8 @@ export function ConfirmDialog({
   description?: React.ReactNode;
   confirmLabel: string;
   destructive?: boolean;
+  /** Block confirming (e.g. strict-mode balance too low); explain why via children. */
+  confirmDisabled?: boolean;
   reason?: ConfirmReasonOptions;
   /** Extra content (summary of the item, warnings…) shown above the reason field. */
   children?: React.ReactNode;
@@ -131,7 +134,7 @@ export function ConfirmDialog({
           <Button
             variant={destructive ? "destructive" : "default"}
             onClick={() => void confirm()}
-            disabled={pending}
+            disabled={pending || confirmDisabled}
           >
             {pending && <Spinner />}
             {confirmLabel}

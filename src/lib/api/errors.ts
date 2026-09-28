@@ -67,6 +67,9 @@ const FRIENDLY_MESSAGES: Record<string, string> = {
   CONTRIBUTION_CANNOT_CANCEL: "Only pending contributions can be cancelled.",
   CONTRIBUTION_ALREADY_PROCESSED: "This contribution has already been processed.",
   TREASURY_ACCOUNT_NOT_FOUND: "Treasury account not found for this room.",
+  // Generic Prisma codes from the global filter (raw messages are too technical to show).
+  RESOURCE_ALREADY_EXISTS: "That already exists or was already processed. Refresh and try again.",
+  RESOURCE_NOT_FOUND: "That item no longer exists. Refresh and try again.",
   [CLIENT_ERROR_CODES.NETWORK_ERROR]:
     "Can't reach the server. Check your connection or try again shortly.",
   [CLIENT_ERROR_CODES.RATE_LIMITED]: "Too many requests. Please wait a minute and try again.",

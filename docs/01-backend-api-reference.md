@@ -156,7 +156,7 @@ There is no file upload endpoint. `receiptUrl` is just a string (see issue #10).
 | Method | Path | Access | Query | Returns (`data`) |
 |---|---|---|---|---|
 | GET | `/reimbursements` | Active member | `?status=PENDING_PAYMENT\|PAID&beneficiaryId&page&limit` | **paginated** Reimbursement `& { beneficiary:{id,fullName,profileImageUrl}, expense:{id,title,amount,category:{id,name}} }` |
-| GET | `/reimbursements/:id` | Active member | — | same `& { payer:{id,fullName}\|null }` |
+| GET | `/reimbursements/:id` | Active member | — | same `& { payer:{id,fullName}\|null }`. **Only** place the payer is exposed (the list has none) |
 | PATCH | `/reimbursements/:id/pay` | ADMIN, ACCOUNTANT (10/min) | — | `{ id, status:"PAID", paidAt, treasuryNewBalance }`. Errors: `TREASURY_INSUFFICIENT_BALANCE` 400 (when `allowNegativeTreasury=false`), `REIMBURSEMENT_ALREADY_PAID` 409 |
 
 ## 9. Notifications — `/notifications`  ⚠️ broken, see issue #1
