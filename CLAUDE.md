@@ -20,6 +20,8 @@ The backend is a separate NestJS + Prisma + PostgreSQL REST API at `D:\yagnik-de
 | Stack, auth (BFF cookie) design, folder structure, conventions | `docs/03-frontend-architecture.md` |
 | Phase-by-phase build plan | `docs/04-implementation-roadmap.md` |
 | Backend bugs/quirks that affect the UI | `docs/05-backend-known-issues.md` |
+| Deploying (Vercel, env vars, backend prerequisites, CSP follow-up) | `docs/06-deployment.md` |
+| Browser QA checklist (the UI hasn't been browser-tested yet) | `docs/07-manual-qa-checklist.md` |
 
 Backend spec docs (background reading): `D:\yagnik-deploy\HisaabSync\docs\` (`06-api-design.md`, `07-rbac-design.md`, `09-error-handling-strategy.md`).
 **The backend code wins over the backend spec docs.** `docs/01` here reflects the code.

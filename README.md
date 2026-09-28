@@ -12,7 +12,14 @@ npm run dev                        # http://localhost:3001
 ```
 
 The backend must be running (default `http://localhost:3000/api/v1`) or you can use the live API
-`https://hissabsync.onrender.com/api/v1`. The home page currently shows backend connectivity (`/health`).
+`https://hissabsync.onrender.com/api/v1`. `/status` shows backend connectivity.
+
+## Features
+
+Rooms with a shared treasury · contributions and expenses with approval workflows · automatic
+reimbursements and payouts (strict or flexible balance) · immutable ledger with filters · approvals
+inbox · members, roles, join/leave requests · activity timeline and admin audit log · notifications
+· light/dark mode · mobile-friendly.
 
 ## Scripts
 
@@ -37,3 +44,5 @@ Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · TanStack
 - `docs/03-frontend-architecture.md` — architecture and conventions
 - `docs/04-implementation-roadmap.md` — phased plan
 - `docs/05-backend-known-issues.md` — backend bugs that affect the UI
+- `docs/06-deployment.md` — deploying to Vercel and backend prerequisites
+- `docs/07-manual-qa-checklist.md` — browser QA checklist

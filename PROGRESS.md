@@ -2,7 +2,7 @@
 
 > Read FIRST every session. Update LAST every session. Keep it compact (status + facts).
 
-Last updated: `2026-09-28` — Phase 0 complete.
+Last updated: `2026-09-28` — all 10 roadmap phases built; browser QA + deploy pending.
 
 ## 1. Phase status (see `docs/04-implementation-roadmap.md`)
 
@@ -16,10 +16,10 @@ Last updated: `2026-09-28` — Phase 0 complete.
 - [x] **Phase 6** — Reimbursements page (status/owed-to filters, table, details **sheet** via `?open=<id>` showing payer), `PayReimbursementButton` (balance before/after, strict-mode pre-check blocks confirm, own-payout warning); Approvals inbox (approvers only; tabs with counts in `?tab=`: pending contributions, pending expenses, to-pay with owed-vs-balance summary, join requests), `JoinRequestsList` (admin approve/reject with optional reason, disables approve for current/former members per #18); `ConfirmDialog.confirmDisabled`; friendly text for generic Prisma codes
 - [x] **Phase 7** — Members page (active list sorted by role, admin "…" menu: change role / remove via **controlled** ConfirmDialogs, leave requests list, join requests, collapsible former members, leave-room button with last-admin block and lock-out warning), `OutstandingMoneyNotice` (owed reimbursements + pending items in remove/leave dialogs), settings page (admin room details form sending only dirty fields, archive danger zone with typed room-code confirmation and returned-status verification, categories); ConfirmDialog controlled mode + configurable reason help text
 - [x] **Phase 8** — Activity page (timeline with date filters + pagination; admin "Audit log" tab with entity-type filter and expandable metadata, ids resolved to names), notifications bell in the header (45 s polling + focus refetch, unread badge, latest unread, mark read / mark all), notifications page (All/Unread in URL, pagination, per-item mark read); **backend #1 defence**: own-only filtering, leak notice, per-item mark-all fallback (bulk `read-all` only when provably safe), optimistic mark-read
-- [ ] **Phase 9** — Polish & ship
+- [x] **Phase 9** — Error boundaries (root, (app), room section, global-error), not-found page, backend-status banner (network/5xx → pings /health every 5 s → refetch; offline banner), page titles for all routes (client pages split into server wrapper + view), security headers + poweredByHeader off, skip link + main landmarks, compact mobile logo, removed Phase 0 debug output, docs/06-deployment.md + docs/07-manual-qa-checklist.md. **Not done:** deploy (needs your Vercel account) and browser QA (see checklist)
 
 ## 2. Current focus
-**Next:** Phase 9: polish & ship (error.tsx / not-found.tsx, server-waking banner via /health, responsive + dark + a11y pass, remove the `/test-auth` leftovers if any, final build, deploy to Vercel, set backend CORS_ORIGIN). Backend fixes still pending: **#1, #17, #22** (security), #2, Patch A (#3/#4), #16 (before deploy).
+**Next:** (1) run `docs/07-manual-qa-checklist.md` in a browser; (2) backend fixes #1, #17, #22, #16 (+ #2, Patch A); (3) deploy per `docs/06-deployment.md`; (4) optional: enforce the CSP, add Playwright smoke tests.
 **Pending backend work (user to apply):** **Patch A** in `docs/05` (#3/#4 room fields). Claude's file tools can't write outside this folder, so run `/add-dir D:\yagnik-deploy\HisaabSync` to let Claude apply backend fixes. #17 (refresh-token hashing) is security-critical.
 **Phase 2 verification:** checked with curl against the local backend: list/create/details/join, invalid code 404, non-UUID 500 (#19), and a member joining their own room (#18). All room pages return 200 with a session cookie. Test room "Phase 2 Test Room" (code `5OIS0I`) exists, owned by the test account, with one stray PENDING join request from test #18.
 **Verification gap:** Phase 1 BFF flows were verified with curl against the local backend (register, duplicate email, wrong password, proxy redirects, CSRF origin block, refresh rotation, profile update/null-clear, change-password error, logout revocation). The in-browser UI flow (forms, bootstrap after reload, cross-tab logout, Google button) still needs a **manual browser check**.
@@ -48,6 +48,8 @@ Last updated: `2026-09-28` — Phase 0 complete.
 - 2026-09-28 (P3): Date filters are sent as exact instants (start/end of the local day, `lib/dates.ts`) because the backend uses `lte` on dateTo.
 - 2026-09-28 (P3): List filters live in the URL, and `router.replace` + a page reset happen on every filter change (see `treasury-view.tsx`). This is the pattern for Phases 4–8.
 - 2026-09-28 (P3): After money mutations, invalidate `roomDetails`, the `roomTreasury` prefix (includes the ledger), the activity prefix and `rooms()` (see `useCreateAdjustment`).
+- 2026-09-28 (P9): Global `QueryCache`/`MutationCache` `onError` → `lib/backend-status.ts` (unreachable errors only). Pages that are client components are split into `page.tsx` (server, metadata) + `components/**/…-view.tsx`.
+- 2026-09-28 (P9): Production cookies are `Secure`, so production needs HTTPS (localhost is exempt in browsers).
 - 2026-09-28 (P8): Never call `markAllNotificationsRead()` directly; go through `useNotificationMutations().markAllRead({ ownUnreadIds, bulkSafe })` (backend #1).
 - 2026-09-28 (P8): One own notification of the member test account was marked read during verification. `read-all` was deliberately never called.
 - 2026-09-28 (P7): Dialogs opened from dropdown items must be controlled (`open`/`onOpenChange`) and rendered outside the menu (see `member-actions-menu.tsx`).

@@ -1,17 +1,26 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider } from "next-themes";
 import { useState } from "react";
 
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { BackendStatusBanner } from "@/components/shared/backend-status-banner";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApiError } from "@/lib/api/errors";
+import { backendStatus, isUnreachableError } from "@/lib/backend-status";
+
+/** Any failed request that looks like "server unreachable" switches on the banner. */
+function reportUnreachable(error: unknown) {
+  if (isUnreachableError(error)) backendStatus.markDown();
+}
 
 function makeQueryClient() {
   return new QueryClient({
+    queryCache: new QueryCache({ onError: reportUnreachable }),
+    mutationCache: new MutationCache({ onError: reportUnreachable }),
     defaultOptions: {
       queries: {
         staleTime: 30_000,
@@ -38,6 +47,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <TooltipProvider>
+          <BackendStatusBanner />
           <AuthProvider>{children}</AuthProvider>
           <Toaster richColors closeButton position="top-right" />
         </TooltipProvider>
