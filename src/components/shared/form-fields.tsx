@@ -17,6 +17,8 @@ interface TextFieldProps<T extends FieldValues> {
   disabled?: boolean;
   /** Extra content next to the label (e.g. a "Forgot?" link). */
   labelAction?: React.ReactNode;
+  /** Extra classes for the <input> itself. */
+  inputClassName?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export function TextField<T extends FieldValues>({
   description,
   disabled,
   labelAction,
+  inputClassName,
 }: TextFieldProps<T>) {
   const id = `field-${name}`;
   return (
@@ -47,6 +50,7 @@ export function TextField<T extends FieldValues>({
           placeholder,
           autoComplete,
           disabled,
+          className: inputClassName,
           "aria-invalid": fieldState.invalid,
           "aria-describedby": description ? `${id}-description` : undefined,
         };

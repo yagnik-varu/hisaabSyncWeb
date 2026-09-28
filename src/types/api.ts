@@ -98,7 +98,7 @@ export interface RoomSettingsSummary {
   allowNegativeTreasury: boolean;
 }
 
-/** Item of GET /rooms (note: treasuryBalance is always "0.00" — backend issue #3). */
+/** Item of GET /rooms. */
 export interface RoomListItem {
   id: Uuid;
   name: string;
@@ -106,10 +106,13 @@ export interface RoomListItem {
   status: RoomStatus;
   myRole: Role;
   memberCount: number;
+  /** Always "0.00" until backend issue #3 is fixed. */
   treasuryBalance: Money;
+  /** Added by the backend #3 fix. When absent, the UI hides the (wrong) balance. */
+  currencyCode?: string;
 }
 
-/** GET /rooms/:roomId (no status/description — backend issue #4). */
+/** GET /rooms/:roomId */
 export interface RoomDetails {
   id: Uuid;
   name: string;
@@ -120,6 +123,10 @@ export interface RoomDetails {
   pendingExpensesCount: number;
   pendingContributionsCount: number;
   settings: RoomSettingsSummary;
+  // Only present once backend issue #4 is fixed — always handle `undefined`.
+  status?: RoomStatus;
+  description?: string | null;
+  createdAt?: IsoDate;
 }
 
 /** POST /rooms response. */

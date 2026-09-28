@@ -91,6 +91,7 @@ Google login: the frontend uses Google Identity Services to get an ID token and 
 | GET | `/rooms` | Bearer | `?status=ACTIVE\|ARCHIVED&page&limit` | **paginated** `[{ id, name, roomCode, status, myRole, memberCount, treasuryBalance }]` — only rooms where caller is ACTIVE member. ⚠️ `treasuryBalance` is always `"0.00"` (known issue #3) |
 | GET | `/rooms/:roomId` | Active member | — | `{ id, name, roomCode, myRole, memberCount, treasuryBalance, pendingExpensesCount, pendingContributionsCount, settings:{allowNegativeTreasury, currencyCode} }` ⚠️ no `status`/`description` (issue #4) |
 | PATCH | `/rooms/:roomId` | ADMIN, not archived | `{ name?, description?, allowNegativeTreasury?, status? }` | `{ id, name, description, status, settings }` ⚠️ `status` is ignored → archive doesn't work (issue #2) |
+| POST | `/rooms/join` quirks | — | — | No DTO validation; members/ex-members/archived rooms not checked (issue #18). Non-UUID `:roomId` anywhere under `/rooms` → 500 (issue #19) |
 
 Creating a room triggers async side effects: a treasury account (balance 0) is created, and the default categories `Rent, Groceries, Electricity, Maintenance` are seeded. Both happen via events, so they may lag the 201 by a few ms.
 
