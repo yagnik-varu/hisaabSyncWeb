@@ -120,7 +120,7 @@ To list pending leave requests, filter `GET /members` by `status === "LEAVE_REQU
 | Method | Path | Access | Body | Returns |
 |---|---|---|---|---|
 | GET | `/rooms/:roomId/categories` | Active member | — | `[{ id, roomId, name, isDefault, createdAt }]` (defaults first, then A–Z) |
-| POST | `/rooms/:roomId/categories` | ADMIN, ACCOUNTANT | `{ name (≤100) }` | category. `CATEGORY_NAME_DUPLICATE` 409 |
+| POST | `/rooms/:roomId/categories` | ADMIN, ACCOUNTANT | `{ name (≤100) }` | category. `CATEGORY_NAME_DUPLICATE` 409, exact **case-sensitive** match only ("rent" ≠ "Rent") |
 | DELETE | `/rooms/:roomId/categories/:categoryId` | ADMIN | — | `{}`. `CATEGORY_IN_USE` 409 if any expense uses it; `CATEGORY_NOT_FOUND` 404 |
 
 ## 6. Treasury & contributions
@@ -142,10 +142,10 @@ Note: `requireContributionApproval` in RoomSettings is **not used**. Every contr
 
 | Method | Path | Access | Body / Query | Returns (`data`) |
 |---|---|---|---|---|
-| POST | `/expenses` | Active member | `{ categoryId (uuid), amount, title (≤255), description?, receiptUrl? (string) }` | Expense `& { category, submitter:{id,fullName,email} }` — 201 |
+| POST | `/expenses` | Active member | `{ categoryId (uuid), amount, title (≤255), description?, receiptUrl? (ANY string — `javascript:` accepted, issue #22) }` | Expense `& { category, submitter:{id,fullName,email} }` — 201 |
 | GET | `/expenses` | Active member | `?status&categoryId&submittedBy&dateFrom&dateTo&page&limit` | **paginated** Expense `& { category, submitter:{id,fullName} }` |
 | GET | `/expenses/:id` | Active member | — | Expense `& { category, submitter:{id,fullName,email,phone}, reviewer:{id,fullName}\|null, reimbursement\|null }` |
-| DELETE | `/expenses/:id` | owner only, PENDING | — | Expense → CANCELLED (`EXPENSE_ACCESS_DENIED` 403 / `EXPENSE_CANNOT_CANCEL` 400) |
+| DELETE | `/expenses/:id` | owner only, PENDING | — | `data: {}` (not the expense). Expense → CANCELLED (`EXPENSE_ACCESS_DENIED` 403 / `EXPENSE_CANNOT_CANCEL` 400) |
 | PATCH | `/expenses/:id/approve` | ADMIN, ACCOUNTANT (10/min) | — | Expense → APPROVED. **A reimbursement is created asynchronously** (see issue #9) |
 | PATCH | `/expenses/:id/reject` | ADMIN, ACCOUNTANT (10/min) | `{ rejectionReason (required, ≤500) }` | Expense → REJECTED. Already processed → **400** `EXPENSE_ALREADY_PROCESSED` |
 

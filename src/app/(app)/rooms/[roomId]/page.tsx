@@ -13,6 +13,7 @@ import Link from "next/link";
 
 import { ActivityList } from "@/components/activity/activity-list";
 import { SubmitContributionDialog } from "@/components/contributions/submit-contribution-dialog";
+import { SubmitExpenseDialog } from "@/components/expenses/submit-expense-dialog";
 import { useCurrentRoom } from "@/components/rooms/room-context";
 import { FormError } from "@/components/shared/form-error";
 import { TreasurySummaryCards } from "@/components/treasury/treasury-summary-cards";
@@ -118,10 +119,13 @@ export default function RoomOverviewPage() {
                       </Button>
                     }
                   />
-                  <QuickLink
-                    href={`${base}/expenses`}
-                    icon={ReceiptIcon}
-                    label="Log a shared expense"
+                  <SubmitExpenseDialog
+                    trigger={
+                      <Button variant="outline" className="justify-start">
+                        <ReceiptIcon />
+                        Log a shared expense
+                      </Button>
+                    }
                   />
                 </>
               )}
