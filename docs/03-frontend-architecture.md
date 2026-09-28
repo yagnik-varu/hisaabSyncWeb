@@ -1,0 +1,97 @@
+# HisaabSync Frontend — Architecture
+
+## 1. Stack (decided 2026-09-28)
+
+| Concern | Choice | Why |
+|---|---|---|
+| Framework | **Next.js 16 (App Router, Turbopack) + React 19 + TypeScript (strict)** | File-based routing, route handlers give us a BFF for secure cookies, easy Vercel deploy |
+| Styling / UI | **Tailwind CSS v4 + shadcn/ui** (`radix-nova` style, Radix primitives, `cn` package) + `lucide-react` icons | Components are copied into our repo, so they are fully editable and accessible |
+| Server state | **TanStack Query** | Caching, refetch-on-focus, invalidation after mutations, polling for notifications |
+| Forms | **React Hook Form + Zod 4** (`@hookform/resolvers`), rendered with shadcn `field` components | Zod schemas mirror the backend DTO rules |
+| HTTP | a thin `fetch` wrapper (`lib/api/client.ts`) | Handles the envelope, error normalization, Bearer header, and 401 → refresh → retry |
+| Money | **decimal.js-light** (or big.js) + `Intl.NumberFormat` | Never do float math on amounts; API sends strings |
+| Dates | `date-fns` | formatting and relative time ("2h ago") |
+| Toasts | shadcn `sonner` | |
+| Theme | `next-themes` (light/dark) | |
+| Google login | Google Identity Services (`@react-oauth/google`) | Gets the ID token for `POST /auth/google` |
+| Package manager | npm | same as the backend |
+
+Installed in Phase 0: Next 16.3.6. `middleware.ts` → `proxy.ts`; `params`/`cookies()` are async. See CLAUDE.md §2.
+
+## 2. Auth design — httpOnly cookie BFF (decided)
+
+```
+Browser ──(login form)──▶ Next Route Handler /api/auth/login ──▶ NestJS /auth/login
+                                   │  sets httpOnly cookie  hs_rt=<refreshToken>
+                                   ◀── returns { user, accessToken }   (refresh token never reaches JS)
+
+Browser ── API calls ───────────────────────────────────────────▶ NestJS directly
+            Authorization: Bearer <accessToken held in memory>
+
+On 401 / on page load ──▶ /api/auth/refresh (reads hs_rt cookie) ──▶ NestJS /auth/refresh
+                                   │  rotates hs_rt cookie
+                                   ◀── returns { accessToken }
+```
+
+- Route handlers under `src/app/api/auth/`: `login`, `register`, `google`, `refresh`, `logout`.
+  - Cookie: `hs_rt`, `httpOnly`, `secure` in prod, `sameSite=lax`, `path=/api/auth`, `maxAge=7d`.
+  - `logout` calls NestJS `/auth/logout` with the cookie's refresh token and the access token, then clears the cookie.
+- **Access token lives only in memory** (an auth store/context). A page reload bootstraps by calling `/api/auth/refresh`.
+- **Single-flight refresh:** concurrent 401s share one refresh promise. Refresh tokens rotate, so two parallel refreshes would invalidate each other.
+- Route protection: `src/proxy.ts` redirects to `/login` when the `hs_rt` cookie is missing (a cheap check). Real validation happens on bootstrap refresh.
+- Profile data comes from `GET /auth/me` after bootstrap.
+- Server-side env: `API_URL` (used by route handlers). Client env: `NEXT_PUBLIC_API_URL`. Both default to `http://localhost:3000/api/v1`.
+
+**Why not call NestJS from Server Components?** The access token is in browser memory, and all pages are per-user dashboards. So data fetching is client-side via TanStack Query, and pages are mostly `"use client"` inside a server layout shell. This is a deliberate trade-off for simplicity.
+
+## 3. Folder structure
+
+```
+src/
+  app/
+    (auth)/login/page.tsx, register/page.tsx          # public, centered card layout
+    (app)/layout.tsx                                    # auth-gated shell: top bar, notifications bell
+    (app)/rooms/page.tsx                                # My Rooms + create/join
+    (app)/rooms/[roomId]/layout.tsx                     # room shell: sidebar/tabs, loads room + myRole
+    (app)/rooms/[roomId]/page.tsx                       # Overview dashboard
+    (app)/rooms/[roomId]/approvals/page.tsx             # ADMIN/ACCOUNTANT inbox
+    (app)/rooms/[roomId]/contributions/page.tsx
+    (app)/rooms/[roomId]/expenses/page.tsx, [expenseId]/page.tsx
+    (app)/rooms/[roomId]/reimbursements/page.tsx
+    (app)/rooms/[roomId]/treasury/page.tsx              # summary + ledger + adjustment (admin)
+    (app)/rooms/[roomId]/members/page.tsx               # members, join & leave requests
+    (app)/rooms/[roomId]/activity/page.tsx              # activity feed; audit-log tab for admin
+    (app)/rooms/[roomId]/settings/page.tsx              # room settings + categories (admin/acct)
+    (app)/notifications/page.tsx
+    (app)/profile/page.tsx
+    api/auth/{login,register,google,refresh,logout}/route.ts
+    layout.tsx, providers.tsx, globals.css
+  components/
+    ui/                  # shadcn generated — do not hand-edit heavily
+    shared/              # Money, StatusBadge, EmptyState, DataTable, Pagination, ConfirmDialog, RoleGate
+    rooms/ expenses/ contributions/ … (feature components)
+  lib/
+    api/client.ts        # fetch wrapper, envelope unwrapping, ApiError, refresh-retry
+    api/errors.ts        # normalizeError() — implements the error-code quirk rule
+    api/endpoints/*.ts   # one file per backend module: auth, rooms, members, categories, treasury, contributions, expenses, reimbursements, notifications, activity
+    auth/                # token store, bootstrap, useAuth()
+    money.ts             # parse/format/compare Decimal strings
+    permissions.ts       # can(role, action) — mirrors docs/02 §3
+    query-keys.ts        # central TanStack Query key factory
+  hooks/                 # useRoom(roomId), useMyRole(), useRoomMutations…
+  types/api.ts           # TS types for every response shape in docs/01
+  schemas/               # zod schemas (amount, room, expense, …)
+```
+
+## 4. Conventions
+
+- **Types:** hand-write `types/api.ts` from `docs/01-backend-api-reference.md`. All money fields are `string`.
+- **Query keys:** `['rooms']`, `['room', roomId]`, `['room', roomId, 'expenses', filters]`, … After any mutation, invalidate the affected lists **and** `['room', roomId]` (pending counts) **and** `['room', roomId, 'treasury']`.
+- **Permissions:** hide or disable actions with `permissions.ts`. The backend is still the authority, so handle 403 gracefully.
+- **Archived room:** when known ARCHIVED (from the list `status`, or after any `ROOM_ALREADY_ARCHIVED` error), show a read-only banner and disable all mutation buttons.
+- **Money input:** a text input with regex `^\d+(\.\d{1,2})?$`, amount > 0, sent as a string. Display with `Intl.NumberFormat(locale, { style: 'currency', currency: currencyCode })`.
+- **Status badges:** one `StatusBadge` component with a consistent color map (PENDING = amber, APPROVED/PAID = green, REJECTED = red, CANCELLED = gray, PENDING_PAYMENT = blue).
+- **Lists:** server pagination via `page`/`limit`, with filters kept in the URL search params so they are shareable and survive a back button.
+- **Destructive or financial actions** (approve, reject, pay, remove member, adjustment) always go through a `ConfirmDialog`. Reject dialogs collect the reason.
+- **Responsive:** mobile-first. The room nav is a sidebar on desktop and a bottom/tab bar or sheet on mobile.
+- **Accessibility:** use shadcn/Radix primitives, label every input, and keep keyboard flows working.
