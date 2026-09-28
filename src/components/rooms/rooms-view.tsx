@@ -2,6 +2,7 @@
 
 import { ArchiveIcon, HomeIcon, LogInIcon, PlusIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 import { CreateRoomDialog } from "@/components/rooms/create-room-dialog";
 import { JoinRoomDialog } from "@/components/rooms/join-room-dialog";
@@ -44,6 +45,17 @@ export function RoomsView() {
     const query = params.toString();
     router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
+
+  // Current page emptied (e.g. rooms archived/left)? Go back to page 1.
+  const pageIsEmpty = !!rooms.data && rooms.data.data.length === 0 && !rooms.isFetching;
+  useEffect(() => {
+    if (pageIsEmpty && page > 1) {
+      const params = new URLSearchParams(searchParams);
+      params.delete("page");
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    }
+  }, [pageIsEmpty, page, searchParams, pathname, router]);
 
   const createButton = (
     <CreateRoomDialog

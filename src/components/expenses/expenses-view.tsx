@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useCategories, useExpenses } from "@/hooks/use-expenses";
 import { useRoomMembers } from "@/hooks/use-treasury";
-import { oneOf, useUrlFilters, uuidParam } from "@/hooks/use-url-filters";
+import { oneOf, useResetEmptyPage, useUrlFilters, uuidParam } from "@/hooks/use-url-filters";
 import { normalizeError } from "@/lib/api/errors";
 import { dateInputToEndIso, dateInputToStartIso, sanitizeDateParam } from "@/lib/dates";
 import type { ExpenseStatus } from "@/types/api";
@@ -81,6 +81,12 @@ export function ExpensesView() {
         }
       />
     ) : null;
+
+  useResetEmptyPage(
+    !!expenses.data && expenses.data.data.length === 0 && !expenses.isFetching,
+    page,
+    setPage,
+  );
 
   return (
     <div className="space-y-4">

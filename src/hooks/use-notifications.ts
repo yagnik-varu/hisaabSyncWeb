@@ -2,6 +2,8 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { toast } from "sonner";
+
 import { useAuth } from "@/hooks/use-auth";
 import {
   listNotifications,
@@ -9,6 +11,7 @@ import {
   markNotificationRead,
   type ListNotificationsParams,
 } from "@/lib/api/endpoints/notifications";
+import { normalizeError } from "@/lib/api/errors";
 import { queryKeys } from "@/lib/query-keys";
 import type { Notification, Paginated } from "@/types/api";
 
@@ -73,6 +76,11 @@ export function useNotificationMutations() {
           old && { ...old, data: old.data.map((n) => (n.id === id ? { ...n, isRead: true } : n)) },
       );
     },
+    // Callers use fire-and-forget mutate(), so surface failures here (onSettled reverts the badge).
+    onError: (error) =>
+      toast.error("Couldn't mark the notification as read", {
+        description: normalizeError(error).message,
+      }),
     onSettled: refresh,
   });
 
@@ -91,6 +99,10 @@ export function useNotificationMutations() {
       if (bulkSafe) return markAllNotificationsRead();
       await Promise.all(ownUnreadIds.map((id) => markNotificationRead(id)));
     },
+    onError: (error) =>
+      toast.error("Couldn't mark notifications as read", {
+        description: normalizeError(error).message,
+      }),
     onSettled: refresh,
   });
 

@@ -135,12 +135,21 @@ export function ExpenseDetail({ expenseId }: { expenseId: string }) {
         </CardContent>
       </Card>
 
-      {e.status === "APPROVED" && <ReimbursementCard expense={e} />}
+      {e.status === "APPROVED" && (
+        <ReimbursementCard expense={e} missing={expense.reimbursementMissing} />
+      )}
     </div>
   );
 }
 
-function ReimbursementCard({ expense }: { expense: ExpenseDetails }) {
+function ReimbursementCard({
+  expense,
+  missing,
+}: {
+  expense: ExpenseDetails;
+  /** Polling gave up without a reimbursement appearing. */
+  missing: boolean;
+}) {
   const { roomId, currencyCode } = useCurrentRoom();
   const r = expense.reimbursement;
 
@@ -151,7 +160,13 @@ function ReimbursementCard({ expense }: { expense: ExpenseDetails }) {
         <CardDescription>What the treasury owes for this expense.</CardDescription>
       </CardHeader>
       <CardContent>
-        {!r ? (
+        {!r && missing ? (
+          <p className="text-muted-foreground flex items-start gap-2 text-sm">
+            <TriangleAlertIcon className="mt-0.5 size-4 shrink-0 text-amber-600" />
+            No reimbursement was created for this expense. This is a server-side problem: ask an
+            admin to check the backend logs. Reload the page to check again.
+          </p>
+        ) : !r ? (
           <p className="text-muted-foreground flex items-center gap-2 text-sm">
             <Spinner />
             Creating the reimbursement… this usually takes a second.

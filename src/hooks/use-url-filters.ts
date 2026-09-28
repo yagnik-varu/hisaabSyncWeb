@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 /**
  * List filters stored in the URL (?status=PENDING&page=2), so reloads, the back button and shared
@@ -54,4 +54,15 @@ export function oneOf<T extends string>(
 /** Keep only UUID-looking values from the URL (backend validates ids with @IsUUID → 400 otherwise). */
 export function uuidParam(value: string | null): string | undefined {
   return value && /^[0-9a-f-]{36}$/i.test(value) ? value : undefined;
+}
+
+/**
+ * If the current page became empty (e.g. you approved or cancelled everything on page 2), jump back
+ * to page 1 instead of showing a misleading "nothing here yet" empty state.
+ * Pass `isEmpty` only for settled data (not while fetching / showing placeholder data).
+ */
+export function useResetEmptyPage(isEmpty: boolean, page: number, setPage: (page: number) => void) {
+  useEffect(() => {
+    if (isEmpty && page > 1) setPage(1);
+  }, [isEmpty, page, setPage]);
 }

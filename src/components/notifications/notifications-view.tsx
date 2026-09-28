@@ -15,7 +15,7 @@ import {
   useNotifications,
   useUnreadNotifications,
 } from "@/hooks/use-notifications";
-import { useUrlFilters } from "@/hooks/use-url-filters";
+import { useResetEmptyPage, useUrlFilters } from "@/hooks/use-url-filters";
 import { normalizeError } from "@/lib/api/errors";
 
 const PAGE_SIZE = 30;
@@ -37,6 +37,7 @@ export function NotificationsView() {
   } = useUnreadNotifications();
   const { markAllRead } = useNotificationMutations();
   const leakDetected = list.leakDetected || unreadLeak;
+  useResetEmptyPage(!!list.data && list.own.length === 0 && !list.isFetching, page, setPage);
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4">

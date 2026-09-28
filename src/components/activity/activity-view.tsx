@@ -16,7 +16,7 @@ import {
 import { PaginationBar } from "@/components/shared/pagination-bar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRoomActivity, useRoomMembers } from "@/hooks/use-treasury";
-import { oneOf, useUrlFilters } from "@/hooks/use-url-filters";
+import { oneOf, useResetEmptyPage, useUrlFilters } from "@/hooks/use-url-filters";
 import { getAuditLogs } from "@/lib/api/endpoints/activity";
 import { normalizeError } from "@/lib/api/errors";
 import { dateInputToEndIso, dateInputToStartIso, sanitizeDateParam } from "@/lib/dates";
@@ -68,6 +68,12 @@ export function ActivityView() {
 
   const current = tab === "audit" ? audit : activity;
   const isFiltered = !!(from || to || (tab === "audit" && entityType));
+
+  useResetEmptyPage(
+    !!current.data && current.data.data.length === 0 && !current.isFetching,
+    page,
+    setPage,
+  );
 
   return (
     <div className="space-y-4">

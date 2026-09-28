@@ -17,7 +17,7 @@ import { LedgerTable } from "@/components/treasury/ledger-table";
 import { TreasurySummaryCards } from "@/components/treasury/treasury-summary-cards";
 import { Button } from "@/components/ui/button";
 import { useRoomMembers, useTransactions } from "@/hooks/use-treasury";
-import { oneOf, useUrlFilters } from "@/hooks/use-url-filters";
+import { oneOf, useResetEmptyPage, useUrlFilters } from "@/hooks/use-url-filters";
 import { normalizeError } from "@/lib/api/errors";
 import { dateInputToEndIso, dateInputToStartIso, sanitizeDateParam } from "@/lib/dates";
 import { buildMemberNames, REFERENCE_LABELS } from "@/lib/ledger";
@@ -55,6 +55,12 @@ export function TreasuryView() {
   });
   const members = useRoomMembers(roomId);
   const names = useMemo(() => buildMemberNames(members.data), [members.data]);
+
+  useResetEmptyPage(
+    !!transactions.data && transactions.data.data.length === 0 && !transactions.isFetching,
+    page,
+    setPage,
+  );
 
   return (
     <div className="space-y-6">

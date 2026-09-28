@@ -58,22 +58,35 @@ export function useExpenses(roomId: string, params: ListExpensesParams) {
   });
 }
 
+/** How many times the detail page re-checks for the async reimbursement (~15 s at 1.5 s). */
+const REIMBURSEMENT_MAX_POLLS = 10;
+
 /**
  * Expense details. After approval the reimbursement is created asynchronously by the backend
  * (docs/05 #9), so while an APPROVED expense has no reimbursement yet we poll briefly.
+ * `reimbursementMissing` becomes true when polling gave up (the backend listener swallows errors),
+ * so the UI can stop showing a spinner and explain instead.
  */
 export function useExpense(roomId: string, expenseId: string, enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.roomExpense(roomId, expenseId),
+  const queryClient = useQueryClient();
+  const queryKey = queryKeys.roomExpense(roomId, expenseId);
+  const query = useQuery({
+    queryKey,
     queryFn: ({ signal }) => getExpense(roomId, expenseId, signal),
     enabled,
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      const waitingForReimbursement = data?.status === "APPROVED" && !data.reimbursement;
-      // Stop after ~15s (10 polls) so a backend failure doesn't poll forever.
-      return waitingForReimbursement && query.state.dataUpdateCount < 10 ? 1500 : false;
+    refetchInterval: (q) => {
+      const data = q.state.data;
+      const waiting = data?.status === "APPROVED" && !data.reimbursement;
+      return waiting && q.state.dataUpdateCount < REIMBURSEMENT_MAX_POLLS ? 1500 : false;
     },
   });
+  const polls = queryClient.getQueryState(queryKey)?.dataUpdateCount ?? 0;
+  const reimbursementMissing =
+    query.data?.status === "APPROVED" &&
+    !query.data.reimbursement &&
+    polls >= REIMBURSEMENT_MAX_POLLS &&
+    !query.isFetching;
+  return { ...query, reimbursementMissing };
 }
 
 function invalidateAfterChange(queryClient: QueryClient, roomId: string, expenseId?: string) {

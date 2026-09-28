@@ -9,7 +9,7 @@ import { PaginationBar } from "@/components/shared/pagination-bar";
 import { useAuth } from "@/hooks/use-auth";
 import { useReimbursements } from "@/hooks/use-reimbursements";
 import { useRoomMembers } from "@/hooks/use-treasury";
-import { oneOf, useUrlFilters, uuidParam } from "@/hooks/use-url-filters";
+import { oneOf, useResetEmptyPage, useUrlFilters, uuidParam } from "@/hooks/use-url-filters";
 import { normalizeError } from "@/lib/api/errors";
 
 const PAGE_SIZE = 20;
@@ -43,6 +43,12 @@ export function ReimbursementsView() {
       value: m.userId,
       label: m.userId === user?.id ? `${m.fullName} (you)` : m.fullName,
     }));
+
+  useResetEmptyPage(
+    !!reimbursements.data && reimbursements.data.data.length === 0 && !reimbursements.isFetching,
+    page,
+    setPage,
+  );
 
   return (
     <div className="space-y-4">

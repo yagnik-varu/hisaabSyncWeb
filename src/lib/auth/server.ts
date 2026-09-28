@@ -38,10 +38,13 @@ export async function callBackend<T = unknown>(
   };
   if (options.accessToken) headers.Authorization = `Bearer ${options.accessToken}`;
 
-  // Pass the real client IP along. NestJS doesn't trust proxies yet (docs/05 #16), but this is
-  // what it needs once `trust proxy` is enabled so rate limits apply per user, not per BFF server.
-  const forwardedFor = options.request?.headers.get("x-forwarded-for");
-  if (forwardedFor) headers["X-Forwarded-For"] = forwardedFor;
+  // Pass the client IP along for per-user rate limiting (docs/05 #16). Prefer x-real-ip, which
+  // hosting platforms like Vercel set themselves; a client-sent X-Forwarded-For can be spoofed, so
+  // only its FIRST entry is used as a fallback (and the backend must count proxy hops correctly).
+  const clientIp =
+    options.request?.headers.get("x-real-ip") ??
+    options.request?.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (clientIp) headers["X-Forwarded-For"] = clientIp;
 
   try {
     const response = await fetch(`${getServerApiUrl()}${path}`, {

@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useContributions } from "@/hooks/use-contributions";
 import { useRoomMembers } from "@/hooks/use-treasury";
-import { oneOf, useUrlFilters, uuidParam } from "@/hooks/use-url-filters";
+import { oneOf, useResetEmptyPage, useUrlFilters, uuidParam } from "@/hooks/use-url-filters";
 import { normalizeError } from "@/lib/api/errors";
 import { dateInputToEndIso, dateInputToStartIso, sanitizeDateParam } from "@/lib/dates";
 import type { ContributionStatus } from "@/types/api";
@@ -80,6 +80,12 @@ export function ContributionsView() {
         }
       />
     ) : null;
+
+  useResetEmptyPage(
+    !!contributions.data && contributions.data.data.length === 0 && !contributions.isFetching,
+    page,
+    setPage,
+  );
 
   return (
     <div className="space-y-4">

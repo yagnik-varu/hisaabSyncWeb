@@ -57,7 +57,9 @@ export function MemberActionsMenu({ member }: { member: RoomMemberItem }) {
 
   return (
     <>
-      <DropdownMenu>
+      {/* modal={false}: the menu opens a dialog; two modal Radix layers fighting over focus and
+          body pointer-events is a known source of "page stops responding to clicks" bugs. */}
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
