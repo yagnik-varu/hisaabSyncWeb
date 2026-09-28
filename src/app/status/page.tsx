@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * TEMPORARY (Phase 0): backend connectivity check.
- * Replaced in Phase 1/2 by a redirect to /login or /rooms.
+ * Public backend connectivity page (/status). Linked from the "server unreachable" state.
+ * Also handy to wake up the Render free-tier backend.
  */
 
 import { useQuery } from "@tanstack/react-query";

@@ -20,7 +20,13 @@ import type { PageMeta, Paginated } from "@/types/api";
 export interface ApiAuthHooks {
   /** Current in-memory access token, or null when signed out. */
   getAccessToken: () => string | null;
-  /** Obtain a fresh access token (via the BFF cookie). Resolve null if the session is gone. */
+  /**
+   * Obtain a fresh access token via the BFF cookie.
+   * - Resolves null when the session is definitively gone (401).
+   * - Rejects on network/5xx errors (backend asleep) — that must NOT log the user out.
+   * MUST be single-flight (see lib/auth/session.ts#refreshSession): the backend rotates refresh
+   * tokens, so two parallel refreshes would invalidate each other.
+   */
   refreshAccessToken: () => Promise<string | null>;
   /** Called when a request is still unauthorized after a refresh attempt. */
   onSessionExpired: () => void;
@@ -34,25 +40,6 @@ let authHooks: ApiAuthHooks = {
 
 export function configureApiAuth(hooks: Partial<ApiAuthHooks>) {
   authHooks = { ...authHooks, ...hooks };
-}
-
-/**
- * Single-flight refresh: if 5 requests hit 401 at once, they all await the SAME refresh.
- * This matters because the backend rotates refresh tokens — two parallel refreshes would
- * invalidate each other and log the user out.
- */
-let refreshInFlight: Promise<string | null> | null = null;
-
-function refreshOnce(): Promise<string | null> {
-  if (!refreshInFlight) {
-    refreshInFlight = authHooks
-      .refreshAccessToken()
-      .catch(() => null)
-      .finally(() => {
-        refreshInFlight = null;
-      });
-  }
-  return refreshInFlight;
 }
 
 // ─── Request core ───────────────────────────────────────────────────────────
@@ -115,7 +102,8 @@ export async function apiRequest<T = unknown>(
     let response = await send(path, options, useAuth ? authHooks.getAccessToken() : null);
 
     if (response.status === 401 && useAuth) {
-      const newToken = await refreshOnce();
+      // Throws on network errors → surfaces as NETWORK_ERROR without ending the session.
+      const newToken = await authHooks.refreshAccessToken();
       if (newToken) {
         response = await send(path, options, newToken);
       }

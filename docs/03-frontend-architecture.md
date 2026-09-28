@@ -33,12 +33,19 @@ On 401 / on page load ──▶ /api/auth/refresh (reads hs_rt cookie) ──▶
                                    ◀── returns { accessToken }
 ```
 
-- Route handlers under `src/app/api/auth/`: `login`, `register`, `google`, `refresh`, `logout`.
-  - Cookie: `hs_rt`, `httpOnly`, `secure` in prod, `sameSite=lax`, `path=/api/auth`, `maxAge=7d`.
-  - `logout` calls NestJS `/auth/logout` with the cookie's refresh token and the access token, then clears the cookie.
-- **Access token lives only in memory** (an auth store/context). A page reload bootstraps by calling `/api/auth/refresh`.
-- **Single-flight refresh:** concurrent 401s share one refresh promise. Refresh tokens rotate, so two parallel refreshes would invalidate each other.
-- Route protection: `src/proxy.ts` redirects to `/login` when the `hs_rt` cookie is missing (a cheap check). Real validation happens on bootstrap refresh.
+- Route handlers under `src/app/api/auth/` (helpers in `src/lib/auth/server.ts`): `login`, `register`, `google`, `refresh`, `logout`.
+  - **Two cookies**, both `httpOnly`, `secure` in prod, `sameSite=lax`, max-age = the refresh token's `exp`:
+    - `hs_rt`, the refresh token, `path=/api/auth` (sent only to the BFF, never with page requests).
+    - `hs_session=1`, `path=/`, a marker so `src/proxy.ts` can gate pages without seeing the token.
+  - Request bodies are whitelisted per route; `Origin` must match the host (CSRF defence in depth on top of SameSite).
+  - `refresh` clears the cookies only on a real 401. A 502/503 (backend asleep) keeps the session.
+  - `logout` revokes via NestJS `/auth/logout`. If the access token is expired, it refreshes first and revokes the new token. It always clears the cookies.
+- **Access token lives only in memory** (`src/lib/auth/session.ts`, read with `useAuth()`). A page reload bootstraps with `/api/auth/refresh` and then `/auth/me`.
+- **Single-flight refresh** within a tab (a shared promise) and **across tabs** (Web Locks `navigator.locks`), because refresh tokens rotate.
+- **Cross-tab sync** via `BroadcastChannel("hisaabsync-auth")`: logging out in one tab logs out all tabs, and logging in wakes the others.
+- Session states: `loading | authenticated | unauthenticated | error`. `error` means the server was unreachable during bootstrap; it shows a retry screen and does not log the user out.
+- `AuthGate` (the `(app)` layout) redirects to `/login?next=…`, dropping `next` after a deliberate logout. `RedirectIfAuthenticated` (the `(auth)` layout) sends signed-in users to a validated `next` (`safeNextPath`, which blocks open redirects).
+- The React Query cache is cleared on sign-out or user switch (`AuthProvider`).
 - Profile data comes from `GET /auth/me` after bootstrap.
 - Server-side env: `API_URL` (used by route handlers). Client env: `NEXT_PUBLIC_API_URL`. Both default to `http://localhost:3000/api/v1`.
 

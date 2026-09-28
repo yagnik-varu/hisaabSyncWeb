@@ -8,7 +8,7 @@ Last updated: `2026-09-28` — Phase 0 complete.
 
 - [x] **Discovery** — Backend explored; docs/01–05 written
 - [x] **Phase 0** — Next 16.3.6 scaffold, shadcn (radix-nova) + 20 base components, TanStack Query/RHF/Zod 4/decimal/date-fns/next-themes, `lib/api/{client,errors,endpoints/health}`, `lib/{env,money,permissions,query-keys}`, `types/api.ts`, providers, temporary backend status page at `/`
-- [ ] **Phase 1** — Authentication (BFF cookie, login/register/Google, profile)
+- [x] **Phase 1** — BFF `app/api/auth/*` (hs_rt + hs_session cookies), `lib/auth/{constants,server,session}`, `useAuth`, `AuthProvider`, `AuthGate`/`RedirectIfAuthenticated`, `src/proxy.ts`, login/register (+ Google button when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is set), profile + change password, minimal app header with user menu, `/status` public page, placeholder `/rooms`
 - [ ] **Phase 2** — App shell & rooms (list, create, join, room layout)
 - [ ] **Phase 3** — Room overview & treasury
 - [ ] **Phase 4** — Contributions
@@ -19,8 +19,10 @@ Last updated: `2026-09-28` — Phase 0 complete.
 - [ ] **Phase 9** — Polish & ship
 
 ## 2. Current focus
-**Next:** Phase 1: auth. Build the BFF route handlers (`app/api/auth/*`, httpOnly `hs_rt` cookie), the auth store, and a `configureApiAuth()` wiring (client.ts already has single-flight refresh + 401 retry hooks), then the login/register/Google pages, `src/proxy.ts`, and the profile page.
-**Blocked by:** nothing. The local backend was not running during Phase 0, so it was verified against the Render backend (`/health` OK, CORS reflects `http://localhost:3001`).
+**Next:** Phase 2: app shell and rooms (list/create/join, room layout). Consider fixing backend #3/#4 first (small room-field fixes).
+**Recommended soon:** backend #17 (refresh-token bcrypt 72-byte bug), which is security-critical.
+**Verification gap:** Phase 1 BFF flows were verified with curl against the local backend (register, duplicate email, wrong password, proxy redirects, CSRF origin block, refresh rotation, profile update/null-clear, change-password error, logout revocation). The in-browser UI flow (forms, bootstrap after reload, cross-tab logout, Google button) still needs a **manual browser check**.
+**Test data:** one test account `phase1-test-1790584568@example.com` was created in the dev DB (no delete endpoint; remove via Prisma Studio if wanted).
 
 ## 3. Key decisions
 - 2026-09-28: Next.js App Router + Tailwind + shadcn/ui + TanStack Query + RHF/Zod.
@@ -33,8 +35,13 @@ Last updated: `2026-09-28` — Phase 0 complete.
 - 2026-09-28 (P0): API client throws `ApiError {status, code, message(friendly), details[]}`. The error-code quirk (code in `message`) was verified against the live API. 429 → `RATE_LIMITED`, fetch TypeError → `NETWORK_ERROR`.
 - 2026-09-28 (P0): `/health` is not enveloped → `api.raw()`. A 503 means the DB is down or the Render instance is cold starting.
 
+- 2026-09-28 (P1): The client's `refreshAccessToken` hook resolves null only on 401 and rejects on network/5xx errors, so a cold-starting backend never logs users out.
+- 2026-09-28 (P1): RHF: use `useWatch` (not `form.watch`) — React Compiler lint flags `watch` as incompatible.
+- 2026-09-28 (P1): Profile PATCH sends `null` to clear phone/image ("" fails `@IsPhoneNumber`/`@IsUrl`). Phone format is `+countrycode…`.
+- 2026-09-28 (P1): Google-only accounts are detected only through `AUTH_NO_PASSWORD_SET` (`/auth/me` has no `provider` field).
+
 ## 4. Backend fixes status
-See `docs/05-backend-known-issues.md`. Open blockers: #1 notifications (Phase 8), #2 archive (Phase 7), #3/#4 room fields (Phase 2).
+See `docs/05-backend-known-issues.md`. Open: **#17 refresh-token hashing (security, fix soon)**, #1 notifications (Phase 8), #2 archive (Phase 7), #3/#4 room fields (Phase 2), #16 throttling behind BFF (before deploy).
 
 ## 5. Environment facts
 - Frontend folder: `D:\yagnik-deploy\HissabSyncFrontend` (the user commits manually)
