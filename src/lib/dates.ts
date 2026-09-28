@@ -40,3 +40,9 @@ export function formatDateTime(iso: string) {
 export function formatDate(iso: string) {
   return format(new Date(iso), "d MMM yyyy");
 }
+
+/** Compact list date: "28 Sep" this year, "28 Sep 25" otherwise. */
+export function formatShortDate(iso: string) {
+  const date = new Date(iso);
+  return format(date, date.getFullYear() === new Date().getFullYear() ? "d MMM" : "d MMM yy");
+}

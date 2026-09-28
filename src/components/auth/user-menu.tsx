@@ -1,7 +1,8 @@
 "use client";
 
-import { LogOutIcon, UserIcon } from "lucide-react";
+import { LogOutIcon, MonitorIcon, MoonIcon, SunIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -12,6 +13,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -20,6 +23,7 @@ import { useAuth } from "@/hooks/use-auth";
 export function UserMenu() {
   const { user, logout } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   if (!user) return null;
 
@@ -52,6 +56,23 @@ export function UserMenu() {
             Profile
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {/* Theme lives here so the phone header stays uncluttered. */}
+        <DropdownMenuLabel className="text-muted-foreground text-xs">Theme</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
+          <DropdownMenuRadioItem value="light">
+            <SunIcon />
+            Light
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark">
+            <MoonIcon />
+            Dark
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="system">
+            <MonitorIcon />
+            System
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { Providers } from "./providers";
@@ -21,6 +21,23 @@ export const metadata: Metadata = {
     template: "%s · HisaabSync",
   },
   description: "Shared room treasury and pooled expense management.",
+  applicationName: "HisaabSync",
+  appleWebApp: { capable: true, title: "HisaabSync", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
+};
+
+/**
+ * Mobile-first viewport: `viewport-fit=cover` lets the bottom nav extend under the home indicator
+ * (we pad it with env(safe-area-inset-bottom)); theme color tints the browser UI on phones.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -7,13 +7,10 @@ import { ActivityList } from "@/components/activity/activity-list";
 import { AuditLogList } from "@/components/activity/audit-log-list";
 import { useCurrentRoom } from "@/components/rooms/room-context";
 import { FormError } from "@/components/shared/form-error";
-import {
-  ClearFiltersButton,
-  DateRangeFilter,
-  FilterBar,
-  FilterSelect,
-} from "@/components/shared/list-filters";
+import { DateRangeFilter, FilterSelect } from "@/components/shared/list-filters";
 import { PaginationBar } from "@/components/shared/pagination-bar";
+import { SectionHeader } from "@/components/shared/section-header";
+import { ListToolbar } from "@/components/shared/list-toolbar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRoomActivity, useRoomMembers } from "@/hooks/use-treasury";
 import { oneOf, useResetEmptyPage, useUrlFilters } from "@/hooks/use-url-filters";
@@ -77,46 +74,47 @@ export function ActivityView() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">Activity</h2>
-          <p className="text-muted-foreground text-sm">
-            Approvals, payouts, treasury adjustments and role changes, newest first.
-          </p>
-        </div>
-        {canAudit && (
-          <Tabs
-            value={tab}
-            onValueChange={(v) =>
-              update({ tab: v === "audit" ? "audit" : undefined, entity: undefined })
-            }
-          >
-            <TabsList>
-              <TabsTrigger value="activity">Timeline</TabsTrigger>
-              <TabsTrigger value="audit">Audit log</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
-      </div>
+      <SectionHeader
+        title="Activity"
+        description="Approvals, payouts, treasury adjustments and role changes, newest first."
+        action={
+          canAudit ? (
+            <Tabs
+              value={tab}
+              onValueChange={(v) =>
+                update({ tab: v === "audit" ? "audit" : undefined, entity: undefined })
+              }
+            >
+              <TabsList>
+                <TabsTrigger value="activity">Timeline</TabsTrigger>
+                <TabsTrigger value="audit">Audit log</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          ) : undefined
+        }
+      />
 
-      <FilterBar>
-        {tab === "audit" && (
-          <FilterSelect
-            id="audit-entity"
-            label="Type"
-            allLabel="All types"
-            value={entityType}
-            onChange={(v) => update({ entity: v })}
-            options={ENTITY_TYPES}
-          />
-        )}
-        <DateRangeFilter idPrefix="activity" from={from} to={to} onChange={update} />
-        {isFiltered && (
-          <ClearFiltersButton
-            onClick={() => update({ from: undefined, to: undefined, entity: undefined })}
-          />
-        )}
-      </FilterBar>
+      <ListToolbar
+        filters={
+          <>
+            {tab === "audit" && (
+              <FilterSelect
+                id="audit-entity"
+                label="Type"
+                allLabel="All types"
+                value={entityType}
+                onChange={(v) => update({ entity: v })}
+                options={ENTITY_TYPES}
+              />
+            )}
+            <DateRangeFilter idPrefix="activity" from={from} to={to} onChange={update} />
+          </>
+        }
+        activeFilterCount={
+          [from, to, tab === "audit" ? entityType : undefined].filter(Boolean).length
+        }
+        onClearFilters={() => update({ from: undefined, to: undefined, entity: undefined })}
+      />
 
       {current.isError ? (
         <FormError message={normalizeError(current.error).message} />

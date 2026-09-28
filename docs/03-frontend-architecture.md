@@ -102,3 +102,23 @@ src/
 - **Destructive or financial actions** (approve, reject, pay, remove member, adjustment) always go through a `ConfirmDialog`. Reject dialogs collect the reason.
 - **Responsive:** mobile-first. The room nav is a sidebar on desktop and a bottom/tab bar or sheet on mobile.
 - **Accessibility:** use shadcn/Radix primitives, label every input, and keep keyboard flows working.
+
+## 5. Mobile-first design system (decided 2026-09-28)
+
+Most users are on phones. **Design and build for ~360–430px first**, then enhance from `md` (768px).
+Screenshots at 390px are verified with a Playwright + Edge script (see PROGRESS.md).
+
+| Area | Rule / component |
+|---|---|
+| Touch targets | Controls are **40px on phones**, compact from `md` (`h-10 md:h-8` in `components/ui/button|input|select|tabs|dropdown-menu`). Inputs use 16px text on phones (no iOS zoom). |
+| Room navigation | Phones: `RoomBottomNav`, a fixed bottom bar: Home · Expenses · **+** (add money / log expense sheet) · Approvals (approvers, badge) or Payouts (members) · More (sheet with all other sections, room code, Invite, All rooms). Desktop: `RoomNav` top tabs. Page content gets `pb-[calc(5rem+env(safe-area-inset-bottom))]` on phones. |
+| Forms | `ResponsiveDialog` → **bottom sheet (vaul Drawer) on phones**, Dialog on desktop. Use `ResponsiveDialogBody` (scrolls) + `ResponsiveDialogFooter` (pinned, full-width buttons; put Cancel first, primary last). |
+| Confirmations | `ConfirmDialog` stays a centered alert (native mobile pattern), widened to `100% - 2rem` on phones. |
+| Money input | `AmountField`: decimal keypad, currency prefix, as-you-type sanitizing, optional quick-amount chips. |
+| Few choices | `ChoiceChips` (radiogroup) instead of a Select when there are ≤ ~8 options (e.g. categories). |
+| Lists | `ItemList` / `ItemRow` card lists, **not tables**: title + amount, status + one truncating detail span + short date (`formatShortDate`) under the amount, notes, and a footer with full-width actions (Approve is primary and last). |
+| Filters | `ListToolbar`: status as scrollable chips, optional "Mine"/"Owed to me" chip, secondary filters in a bottom sheet behind a "Filters" button (count badge) on phones, inline on desktop. |
+| Page titles | `SectionHeader` (title + action; description hidden on phones). The room header is hidden on phones; the room name is in the app header, and Home has its own compact hero. |
+| Details | Side sheets become **bottom** sheets on phones (`useIsMobile()`). |
+| Header | Phones: icon logo, room switcher, bell = link to /notifications, avatar menu (Profile, **Theme**, Log out). Desktop: dropdown bell + theme toggle. |
+| Native touches | `InviteButton` uses the Web Share API (WhatsApp etc.) with a copy fallback. `TextField` sets `autoCapitalize/autoCorrect/inputMode/enterKeyHint` per type. `viewport-fit=cover` + safe-area padding. `themeColor`. No tap highlight. `touch-action: manipulation`. |

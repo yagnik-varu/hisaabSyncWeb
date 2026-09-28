@@ -36,6 +36,8 @@ Next.js 16 (App Router, Turbopack, TypeScript strict) · React 19 · Tailwind CS
 
 ## 3. Hard rules
 
+- **Mobile-first.** Most users are on phones. Build every screen for ~360–430px first, using the mobile design system in `docs/03` §5 (bottom nav, `ResponsiveDialog` sheets, `ItemList` rows, `ListToolbar` chips, `AmountField`, 40px touch targets). Never add tables or small click targets for phone flows.
+
 - **Money:** API amounts are strings. Never use `parseFloat`/`Number` arithmetic on money. Use `lib/money.ts` (decimal lib). Send amounts as strings matching `^\d+(\.\d{1,2})?$`. Format with the room's `currencyCode`.
 - **Auth:** the refresh token lives **only** in the httpOnly `hs_rt` cookie, set by `app/api/auth/*` route handlers. The access token lives **only in memory**. Never put tokens in localStorage/sessionStorage. Refresh is single-flight.
 - **API access:** all calls go through `lib/api/client.ts` and `lib/api/endpoints/*`. No raw `fetch` in components.

@@ -129,5 +129,12 @@
   }
   html {
     @apply font-sans;
+    /* No grey flash on tap (mobile Safari/Chrome); our buttons have their own pressed states. */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+  /* Faster taps: no double-tap-to-zoom delay on interactive elements. */
+  a, button, [role="button"], input, select, textarea, label {
+    touch-action: manipulation;
   }
 }

@@ -100,3 +100,28 @@ export function formatMoney(
   const amount = Number(toDecimal(value).toFixed(2));
   return getFormatter(currencyCode, options.signed ? "exceptZero" : "auto").format(amount);
 }
+
+/** "INR" → "₹", "USD" → "$" (falls back to the code itself). */
+export function currencySymbol(currencyCode: string): string {
+  try {
+    const parts = new Intl.NumberFormat(localeFor(currencyCode), {
+      style: "currency",
+      currency: currencyCode,
+      currencyDisplay: "narrowSymbol",
+    }).formatToParts(0);
+    return parts.find((p) => p.type === "currency")?.value ?? currencyCode;
+  } catch {
+    return currencyCode;
+  }
+}
+
+/**
+ * Clean what the user types into an amount box: digits + one decimal point, max 2 decimals.
+ * Some mobile decimal keypads (locale-dependent) show "," — treat it as ".".
+ */
+export function sanitizeAmountInput(raw: string): string {
+  const cleaned = raw.replace(/,/g, ".").replace(/[^\d.]/g, "");
+  const [whole, ...rest] = cleaned.split(".");
+  if (rest.length === 0) return whole;
+  return `${whole}.${rest.join("").slice(0, 2)}`;
+}

@@ -7,20 +7,16 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { useCurrentRoom } from "@/components/rooms/room-context";
+import { AmountField } from "@/components/shared/amount-field";
 import { FormError } from "@/components/shared/form-error";
-import { TextField } from "@/components/shared/form-fields";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/components/shared/responsive-dialog";
 import { Money } from "@/components/shared/money";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -92,19 +88,17 @@ export function AdjustmentDialog({ trigger }: { trigger: React.ReactNode }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-          <DialogHeader>
-            <DialogTitle>Manual adjustment</DialogTitle>
-            <DialogDescription>
-              Record money that entered or left the treasury outside the normal flow. This is
-              permanent and visible to every member.
-            </DialogDescription>
-          </DialogHeader>
-
-          <FieldGroup className="py-4">
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      trigger={trigger}
+      dismissible={!mutation.isPending}
+      title="Manual adjustment"
+      description="Record money that entered or left the treasury outside the normal flow. This is permanent and visible to every member."
+    >
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="contents">
+        <ResponsiveDialogBody>
+          <FieldGroup>
             <FormError message={errors.root?.server?.message} />
 
             <Controller
@@ -123,14 +117,7 @@ export function AdjustmentDialog({ trigger }: { trigger: React.ReactNode }) {
               )}
             />
 
-            <TextField
-              control={form.control}
-              name="amount"
-              label={`Amount (${currencyCode})`}
-              placeholder="500.00"
-              autoComplete="off"
-              inputClassName="tabular-nums"
-            />
+            <AmountField control={form.control} name="amount" currencyCode={currencyCode} />
 
             <Controller
               control={form.control}
@@ -175,27 +162,27 @@ export function AdjustmentDialog({ trigger }: { trigger: React.ReactNode }) {
               </Alert>
             )}
           </FieldGroup>
+        </ResponsiveDialogBody>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={mutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant={breaksStrictMode ? "destructive" : "default"}
-              disabled={mutation.isPending}
-            >
-              {mutation.isPending && <Spinner />}
-              Record {type === "CREDIT" ? "credit" : "debit"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <ResponsiveDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={mutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant={breaksStrictMode ? "destructive" : "default"}
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending && <Spinner />}
+            Record {type === "CREDIT" ? "credit" : "debit"}
+          </Button>
+        </ResponsiveDialogFooter>
+      </form>
+    </ResponsiveDialog>
   );
 }

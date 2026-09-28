@@ -6,22 +6,14 @@ import Link from "next/link";
 import { ExpenseActions } from "@/components/expenses/expense-actions";
 import { StatusBadge } from "@/components/shared/badges";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ItemList, ItemListSkeleton, ItemRow, RowIcon } from "@/components/shared/item-list";
 import { Money } from "@/components/shared/money";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useAuth } from "@/hooks/use-auth";
-import { formatDate, formatDateTime } from "@/lib/dates";
+import { formatDateTime, formatShortDate } from "@/lib/dates";
 import { safeExternalUrl } from "@/lib/url";
 import type { Expense } from "@/types/api";
 
+/** Expenses as a mobile-first list. The title opens the detail page. */
 export function ExpensesTable({
   roomId,
   expenses,
@@ -39,15 +31,7 @@ export function ExpensesTable({
 }) {
   const { user } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 5 }, (_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
-      </div>
-    );
-  }
+  if (loading) return <ItemListSkeleton />;
 
   if (!expenses?.length) {
     return (
@@ -65,77 +49,52 @@ export function ExpensesTable({
   }
 
   return (
-    <div className="rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Expense</TableHead>
-            <TableHead className="hidden sm:table-cell">Date</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="hidden md:table-cell">Status</TableHead>
-            <TableHead className="text-right">
-              <span className="sr-only">Actions</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {expenses.map((e) => {
-            const who =
-              e.submittedBy === user?.id ? "You" : (e.submitter?.fullName ?? "Former member");
-            return (
-              <TableRow key={e.id}>
-                <TableCell className="align-top whitespace-normal">
-                  <div className="min-w-0 space-y-1">
-                    <Link
-                      href={`/rooms/${roomId}/expenses/${e.id}`}
-                      className="font-medium break-words hover:underline"
-                    >
-                      {e.title}
-                    </Link>
-                    <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                      {e.category && (
-                        <Badge variant="outline" className="font-normal">
-                          {e.category.name}
-                        </Badge>
-                      )}
-                      <span>{who}</span>
-                      {safeExternalUrl(e.receiptUrl) && (
-                        <PaperclipIcon className="size-3.5" aria-label="Has receipt" />
-                      )}
-                    </div>
-                    {e.status === "REJECTED" && e.rejectionReason && (
-                      <p className="text-destructive text-sm break-words">
-                        Rejected: {e.rejectionReason}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-2 md:hidden">
-                      <StatusBadge status={e.status} />
-                      <span className="text-muted-foreground text-xs sm:hidden">
-                        {formatDate(e.createdAt)}
-                      </span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell
-                  className="text-muted-foreground hidden align-top sm:table-cell"
-                  title={formatDateTime(e.createdAt)}
-                >
-                  {formatDate(e.createdAt)}
-                </TableCell>
-                <TableCell className="text-right align-top font-medium">
-                  <Money value={e.amount} currency={currencyCode} />
-                </TableCell>
-                <TableCell className="hidden align-top md:table-cell">
-                  <StatusBadge status={e.status} />
-                </TableCell>
-                <TableCell className="align-top">
-                  <ExpenseActions expense={e} />
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+    <ItemList>
+      {expenses.map((e) => {
+        const who = e.submittedBy === user?.id ? "You" : (e.submitter?.fullName ?? "Former member");
+        return (
+          <ItemRow
+            key={e.id}
+            leading={
+              <RowIcon>
+                <ReceiptIcon />
+              </RowIcon>
+            }
+            title={
+              // Stretched link: the whole title area is a big tap target on phones.
+              <Link href={`/rooms/${roomId}/expenses/${e.id}`} className="hover:underline">
+                {e.title}
+              </Link>
+            }
+            amount={<Money value={e.amount} currency={currencyCode} />}
+            subtitle={
+              <>
+                <StatusBadge status={e.status} />
+                <span className="min-w-0 truncate">
+                  {[e.category?.name, who].filter(Boolean).join(" · ")}
+                </span>
+                {safeExternalUrl(e.receiptUrl) && (
+                  <PaperclipIcon className="size-3.5 shrink-0" aria-label="Has receipt" />
+                )}
+              </>
+            }
+            aside={
+              <time
+                dateTime={e.createdAt}
+                title={formatDateTime(e.createdAt)}
+                className="text-muted-foreground text-xs"
+              >
+                {formatShortDate(e.createdAt)}
+              </time>
+            }
+            footer={<ExpenseActions expense={e} size="default" className="contents" />}
+          >
+            {e.status === "REJECTED" && e.rejectionReason && (
+              <p className="text-destructive text-sm break-words">Rejected: {e.rejectionReason}</p>
+            )}
+          </ItemRow>
+        );
+      })}
+    </ItemList>
   );
 }

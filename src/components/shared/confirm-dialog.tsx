@@ -112,7 +112,8 @@ export function ConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
-      <AlertDialogContent>
+      {/* Wider on phones than shadcn's 320px default: room for the summary + reason field. */}
+      <AlertDialogContent className="max-h-[90dvh] overflow-y-auto data-[size=default]:max-w-[calc(100%-2rem)] sm:data-[size=default]:max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description && <AlertDialogDescription>{description}</AlertDialogDescription>}

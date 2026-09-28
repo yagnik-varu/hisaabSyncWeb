@@ -21,9 +21,12 @@ import type { Expense } from "@/types/api";
 export function ExpenseActions({
   expense,
   size = "sm",
+  className = "flex flex-wrap justify-end gap-1",
 }: {
   expense: Expense;
   size?: "sm" | "default";
+  /** Wrapper classes. Lists pass "contents" so the buttons join the row's action grid. */
+  className?: string;
 }) {
   const { roomId, currencyCode, can, isArchived } = useCurrentRoom();
   const { user } = useAuth();
@@ -34,6 +37,7 @@ export function ExpenseActions({
   const isOwn = user?.id === expense.submittedBy;
   const canReview = can("expenses.review");
   const canCancel = canCancelOwn(user?.id, expense.submittedBy, expense.status);
+  if (!canReview && !canCancel) return null;
   const who = isOwn ? "you" : (expense.submitter?.fullName ?? "this member");
   const amount = formatMoney(expense.amount, currencyCode);
 
@@ -50,12 +54,12 @@ export function ExpenseActions({
   );
 
   return (
-    <div className="flex flex-wrap justify-end gap-1">
+    <div className={className}>
       {canReview && (
         <>
           <ConfirmDialog
             trigger={
-              <Button size={size} variant="outline" aria-label={`Approve ${expense.title}`}>
+              <Button size={size} className="order-last" aria-label={`Approve ${expense.title}`}>
                 <CheckIcon />
                 Approve
               </Button>
@@ -84,7 +88,7 @@ export function ExpenseActions({
           </ConfirmDialog>
           <ConfirmDialog
             trigger={
-              <Button size={size} variant="ghost" aria-label={`Reject ${expense.title}`}>
+              <Button size={size} variant="outline" aria-label={`Reject ${expense.title}`}>
                 <XIcon />
                 Reject
               </Button>
@@ -112,7 +116,7 @@ export function ExpenseActions({
       {canCancel && (
         <ConfirmDialog
           trigger={
-            <Button size={size} variant="ghost">
+            <Button size={size} variant="outline">
               <Undo2Icon />
               Cancel
             </Button>

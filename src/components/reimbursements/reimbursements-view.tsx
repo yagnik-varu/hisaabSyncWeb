@@ -4,8 +4,10 @@ import { ReimbursementSheet } from "@/components/reimbursements/reimbursement-sh
 import { ReimbursementsTable } from "@/components/reimbursements/reimbursements-table";
 import { useCurrentRoom } from "@/components/rooms/room-context";
 import { FormError } from "@/components/shared/form-error";
-import { ClearFiltersButton, FilterBar, FilterSelect } from "@/components/shared/list-filters";
+import { FilterSelect } from "@/components/shared/list-filters";
 import { PaginationBar } from "@/components/shared/pagination-bar";
+import { SectionHeader } from "@/components/shared/section-header";
+import { ListToolbar } from "@/components/shared/list-toolbar";
 import { useAuth } from "@/hooks/use-auth";
 import { useReimbursements } from "@/hooks/use-reimbursements";
 import { useRoomMembers } from "@/hooks/use-treasury";
@@ -52,33 +54,41 @@ export function ReimbursementsView() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">Reimbursements</h2>
-        <p className="text-muted-foreground text-sm">
-          What the treasury owes members for approved expenses, and what it has paid back.
-        </p>
-      </div>
+      <SectionHeader
+        title="Reimbursements"
+        description="What the treasury owes members for approved expenses, and what it has paid back."
+      />
 
-      <FilterBar>
-        <FilterSelect
-          id="reimb-status"
-          label="Status"
-          value={filters.status}
-          onChange={(v) => update({ status: v })}
-          options={STATUSES}
-        />
-        <FilterSelect
-          id="reimb-member"
-          label="Owed to"
-          allLabel="Everyone"
-          value={filters.beneficiaryId}
-          onChange={(v) => update({ member: v })}
-          options={memberOptions}
-        />
-        {isFiltered && (
-          <ClearFiltersButton onClick={() => update({ status: undefined, member: undefined })} />
-        )}
-      </FilterBar>
+      <ListToolbar
+        status={{
+          label: "Status",
+          value: filters.status,
+          onChange: (v) => update({ status: v }),
+          options: STATUSES,
+        }}
+        toggle={
+          user
+            ? {
+                label: "Owed to me",
+                active: filters.beneficiaryId === user.id,
+                onToggle: () =>
+                  update({ member: filters.beneficiaryId === user.id ? undefined : user.id }),
+              }
+            : undefined
+        }
+        filters={
+          <FilterSelect
+            id="reimb-member"
+            label="Owed to"
+            allLabel="Everyone"
+            value={filters.beneficiaryId}
+            onChange={(v) => update({ member: v })}
+            options={memberOptions}
+          />
+        }
+        activeFilterCount={filters.beneficiaryId ? 1 : 0}
+        onClearFilters={() => update({ member: undefined })}
+      />
 
       {reimbursements.isError ? (
         <FormError message={normalizeError(reimbursements.error).message} />

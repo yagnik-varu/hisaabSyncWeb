@@ -10,6 +10,7 @@ import { LeaveRoomButton } from "@/components/members/leave-room-button";
 import { MemberActionsMenu } from "@/components/members/member-actions-menu";
 import { useCurrentRoom } from "@/components/rooms/room-context";
 import { RoleBadge } from "@/components/shared/badges";
+import { SectionHeader } from "@/components/shared/section-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FormError } from "@/components/shared/form-error";
 import { UserAvatar } from "@/components/shared/user-avatar";
@@ -50,21 +51,23 @@ export function MembersView() {
   return (
     <div className="space-y-8">
       <section className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">
+        <SectionHeader
+          title={
+            <>
               Members{" "}
               {!members.isPending && (
                 <span className="text-muted-foreground font-normal">({active.length})</span>
               )}
-            </h2>
-            <p className="text-muted-foreground text-sm">
+            </>
+          }
+          description={
+            <>
               Roles apply to this room only.
               {canManage && " You can't change your own role or remove yourself."}
-            </p>
-          </div>
-          <LeaveRoomButton isLastAdmin={isLastAdmin} />
-        </div>
+            </>
+          }
+          action={<LeaveRoomButton isLastAdmin={isLastAdmin} />}
+        />
 
         {members.isPending ? (
           <div className="space-y-2">

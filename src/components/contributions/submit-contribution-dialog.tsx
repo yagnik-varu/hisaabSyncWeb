@@ -1,26 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { InfoIcon } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { useCurrentRoom } from "@/components/rooms/room-context";
+import { AmountField } from "@/components/shared/amount-field";
 import { FormError } from "@/components/shared/form-error";
-import { TextField } from "@/components/shared/form-fields";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/components/shared/responsive-dialog";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useContributionMutations } from "@/hooks/use-contributions";
@@ -29,11 +23,25 @@ import { formatMoney, toApiAmount } from "@/lib/money";
 import { contributionSchema, type ContributionValues } from "@/schemas/contribution";
 
 const DEFAULTS: ContributionValues = { amount: "", note: "" };
+const QUICK_AMOUNTS = [500, 1000, 2000, 5000];
 
-/** "Add money to the pool" — creates a PENDING contribution that an approver confirms. */
-export function SubmitContributionDialog({ trigger }: { trigger: React.ReactNode }) {
+/**
+ * "Add money to the pool" — creates a PENDING contribution that an approver confirms.
+ * Bottom sheet on phones, dialog on desktop. Pass `open`/`onOpenChange` to control it from
+ * elsewhere (e.g. the bottom-nav "+" menu) instead of a `trigger`.
+ */
+export function SubmitContributionDialog({
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const { roomId, currencyCode } = useCurrentRoom();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
   const { submit } = useContributionMutations(roomId);
 
   const form = useForm<ContributionValues>({
@@ -41,6 +49,11 @@ export function SubmitContributionDialog({ trigger }: { trigger: React.ReactNode
     defaultValues: DEFAULTS,
   });
   const { errors } = form.formState;
+
+  function setOpen(next: boolean) {
+    if (controlledOpen === undefined) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  }
 
   function handleOpenChange(next: boolean) {
     if (submit.isPending) return;
@@ -67,26 +80,23 @@ export function SubmitContributionDialog({ trigger }: { trigger: React.ReactNode
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-          <DialogHeader>
-            <DialogTitle>Add money to the pool</DialogTitle>
-            <DialogDescription>
-              Record money you&apos;ve put into the room treasury (cash, UPI, bank transfer…).
-            </DialogDescription>
-          </DialogHeader>
-
-          <FieldGroup className="py-4">
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      trigger={trigger}
+      dismissible={!submit.isPending}
+      title="Add money to the pool"
+      description="Record money you've put into the room treasury (cash, UPI, bank transfer…). It counts once an admin or accountant approves it."
+    >
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="contents">
+        <ResponsiveDialogBody>
+          <FieldGroup>
             <FormError message={errors.root?.server?.message} />
-            <TextField
+            <AmountField
               control={form.control}
               name="amount"
-              label={`Amount (${currencyCode})`}
-              placeholder="2000.00"
-              autoComplete="off"
-              inputClassName="tabular-nums"
+              currencyCode={currencyCode}
+              quickAmounts={QUICK_AMOUNTS}
             />
             <Controller
               control={form.control}
@@ -103,35 +113,28 @@ export function SubmitContributionDialog({ trigger }: { trigger: React.ReactNode
                     placeholder="September share, paid via UPI (ref 4821…)"
                     aria-invalid={fieldState.invalid}
                   />
+                  <FieldDescription>You can cancel it while it&apos;s pending.</FieldDescription>
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
             />
-            <Alert>
-              <InfoIcon />
-              <AlertDescription>
-                The balance goes up once an admin or accountant approves it. You can cancel it while
-                it&apos;s pending.
-              </AlertDescription>
-            </Alert>
           </FieldGroup>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={submit.isPending}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submit.isPending}>
-              {submit.isPending && <Spinner />}
-              Submit
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={submit.isPending}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={submit.isPending}>
+            {submit.isPending && <Spinner />}
+            Submit contribution
+          </Button>
+        </ResponsiveDialogFooter>
+      </form>
+    </ResponsiveDialog>
   );
 }

@@ -19,7 +19,16 @@ import type { Contribution } from "@/types/api";
  * - approvers: Approve / Reject (reason optional)
  * - the submitter: Cancel
  */
-export function ContributionActions({ contribution }: { contribution: Contribution }) {
+export function ContributionActions({
+  contribution,
+  size = "sm",
+  className = "flex flex-wrap justify-end gap-1",
+}: {
+  contribution: Contribution;
+  size?: "sm" | "default";
+  /** Wrapper classes. Lists pass "contents" so the buttons join the row's action grid. */
+  className?: string;
+}) {
   const { roomId, currencyCode, can, isArchived } = useCurrentRoom();
   const { user } = useAuth();
   const { approve, reject, cancel } = useContributionMutations(roomId);
@@ -29,6 +38,7 @@ export function ContributionActions({ contribution }: { contribution: Contributi
   const isOwn = user?.id === contribution.contributorId;
   const canReview = can("contributions.review");
   const canCancel = canCancelOwn(user?.id, contribution.contributorId, contribution.status);
+  if (!canReview && !canCancel) return null;
   const who = contribution.contributor?.fullName ?? "this member";
   const amount = formatMoney(contribution.amount, currencyCode);
 
@@ -43,12 +53,16 @@ export function ContributionActions({ contribution }: { contribution: Contributi
   );
 
   return (
-    <div className="flex flex-wrap justify-end gap-1">
+    <div className={className}>
       {canReview && (
         <>
           <ConfirmDialog
             trigger={
-              <Button size="sm" variant="outline" aria-label={`Approve ${amount} from ${who}`}>
+              <Button
+                size={size}
+                className="order-last"
+                aria-label={`Approve ${amount} from ${who}`}
+              >
                 <CheckIcon />
                 Approve
               </Button>
@@ -74,7 +88,7 @@ export function ContributionActions({ contribution }: { contribution: Contributi
           </ConfirmDialog>
           <ConfirmDialog
             trigger={
-              <Button size="sm" variant="ghost" aria-label={`Reject ${amount} from ${who}`}>
+              <Button size={size} variant="outline" aria-label={`Reject ${amount} from ${who}`}>
                 <XIcon />
                 Reject
               </Button>
@@ -100,7 +114,7 @@ export function ContributionActions({ contribution }: { contribution: Contributi
       {canCancel && (
         <ConfirmDialog
           trigger={
-            <Button size="sm" variant="ghost">
+            <Button size={size} variant="outline">
               <Undo2Icon />
               Cancel
             </Button>

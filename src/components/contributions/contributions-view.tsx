@@ -6,13 +6,10 @@ import { ContributionsTable } from "@/components/contributions/contributions-tab
 import { SubmitContributionDialog } from "@/components/contributions/submit-contribution-dialog";
 import { useCurrentRoom } from "@/components/rooms/room-context";
 import { FormError } from "@/components/shared/form-error";
-import {
-  ClearFiltersButton,
-  DateRangeFilter,
-  FilterBar,
-  FilterSelect,
-} from "@/components/shared/list-filters";
+import { DateRangeFilter, FilterSelect } from "@/components/shared/list-filters";
+import { ListToolbar } from "@/components/shared/list-toolbar";
 import { PaginationBar } from "@/components/shared/pagination-bar";
+import { SectionHeader } from "@/components/shared/section-header";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useContributions } from "@/hooks/use-contributions";
@@ -89,41 +86,50 @@ export function ContributionsView() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">Contributions</h2>
-          <p className="text-muted-foreground text-sm">
-            Money members put into the pool. It counts once an admin or accountant approves it.
-          </p>
-        </div>
-        {addButton}
-      </div>
+      <SectionHeader
+        title="Contributions"
+        description="Money members put into the pool. It counts once an admin or accountant approves it."
+        action={addButton}
+      />
 
-      <FilterBar>
-        <FilterSelect
-          id="contrib-status"
-          label="Status"
-          value={filters.status}
-          onChange={(v) => update({ status: v })}
-          options={STATUSES}
-        />
-        <FilterSelect
-          id="contrib-member"
-          label="Member"
-          allLabel="Everyone"
-          value={filters.contributorId}
-          onChange={(v) => update({ member: v })}
-          options={memberOptions}
-        />
-        <DateRangeFilter idPrefix="contrib" from={filters.from} to={filters.to} onChange={update} />
-        {isFiltered && (
-          <ClearFiltersButton
-            onClick={() =>
-              update({ status: undefined, member: undefined, from: undefined, to: undefined })
-            }
-          />
-        )}
-      </FilterBar>
+      <ListToolbar
+        status={{
+          label: "Status",
+          value: filters.status,
+          onChange: (v) => update({ status: v }),
+          options: STATUSES,
+        }}
+        toggle={
+          user
+            ? {
+                label: "Mine",
+                active: filters.contributorId === user.id,
+                onToggle: () =>
+                  update({ member: filters.contributorId === user.id ? undefined : user.id }),
+              }
+            : undefined
+        }
+        filters={
+          <>
+            <FilterSelect
+              id="contrib-member"
+              label="Member"
+              allLabel="Everyone"
+              value={filters.contributorId}
+              onChange={(v) => update({ member: v })}
+              options={memberOptions}
+            />
+            <DateRangeFilter
+              idPrefix="contrib"
+              from={filters.from}
+              to={filters.to}
+              onChange={update}
+            />
+          </>
+        }
+        activeFilterCount={[filters.contributorId, filters.from, filters.to].filter(Boolean).length}
+        onClearFilters={() => update({ member: undefined, from: undefined, to: undefined })}
+      />
 
       {contributions.isError ? (
         <FormError message={normalizeError(contributions.error).message} />

@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 
 import { ExpenseActions } from "@/components/expenses/expense-actions";
+import { PayReimbursementButton } from "@/components/reimbursements/pay-reimbursement-button";
 import { useCurrentRoom } from "@/components/rooms/room-context";
 import { StatusBadge } from "@/components/shared/badges";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -79,7 +80,11 @@ export function ExpenseDetail({ expenseId }: { expenseId: string }) {
           </div>
           <Money value={e.amount} currency={currencyCode} className="text-3xl font-semibold" />
         </div>
-        <ExpenseActions expense={e} size="default" />
+        <ExpenseActions
+          expense={e}
+          size="default"
+          className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end [&>*:only-child]:col-span-2"
+        />
       </div>
 
       {e.status === "REJECTED" && (
@@ -95,14 +100,14 @@ export function ExpenseDetail({ expenseId }: { expenseId: string }) {
           <CardTitle>Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm sm:gap-x-6">
             <DetailItem label="Category">
               {e.category ? <Badge variant="outline">{e.category.name}</Badge> : "—"}
             </DetailItem>
             <DetailItem label="Paid by">{paidBy}</DetailItem>
             <DetailItem label="Submitted">{formatDateTime(e.createdAt)}</DetailItem>
             {e.reviewer && e.reviewedAt && (
-              <DetailItem label={e.status === "REJECTED" ? "Rejected" : "Reviewed"}>
+              <DetailItem label={e.status === "REJECTED" ? "Rejected" : "Reviewed"} wide>
                 {e.reviewer.fullName} · {formatDateTime(e.reviewedAt)}
               </DetailItem>
             )}
@@ -184,9 +189,29 @@ function ReimbursementCard({
                   : "Waiting for an admin or accountant to pay it out."}
               </p>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/rooms/${roomId}/reimbursements`}>View reimbursements</Link>
-            </Button>
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto [&>*:only-child]:col-span-2">
+              <Button asChild variant="outline">
+                <Link href={`/rooms/${roomId}/reimbursements?open=${r.id}`}>Details</Link>
+              </Button>
+              {/* Pay right here instead of hunting for it in the reimbursements list. */}
+              <PayReimbursementButton
+                size="default"
+                reimbursement={{
+                  ...r,
+                  beneficiary: {
+                    id: expense.submittedBy,
+                    fullName: expense.submitter?.fullName ?? "Member",
+                    profileImageUrl: null,
+                  },
+                  expense: {
+                    id: expense.id,
+                    title: expense.title,
+                    amount: expense.amount,
+                    category: { id: expense.categoryId, name: expense.category?.name ?? "" },
+                  },
+                }}
+              />
+            </div>
           </div>
         )}
       </CardContent>
@@ -204,7 +229,7 @@ function DetailItem({
   children: React.ReactNode;
 }) {
   return (
-    <div className={wide ? "sm:col-span-2" : undefined}>
+    <div className={wide ? "col-span-2" : undefined}>
       <dt className="text-muted-foreground mb-1">{label}</dt>
       <dd>{children}</dd>
     </div>

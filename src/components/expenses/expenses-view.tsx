@@ -6,12 +6,10 @@ import { ExpensesTable } from "@/components/expenses/expenses-table";
 import { SubmitExpenseDialog } from "@/components/expenses/submit-expense-dialog";
 import { useCurrentRoom } from "@/components/rooms/room-context";
 import { FormError } from "@/components/shared/form-error";
-import {
-  ClearFiltersButton,
-  DateRangeFilter,
-  FilterSelect,
-} from "@/components/shared/list-filters";
+import { DateRangeFilter, FilterSelect } from "@/components/shared/list-filters";
+import { ListToolbar } from "@/components/shared/list-toolbar";
 import { PaginationBar } from "@/components/shared/pagination-bar";
+import { SectionHeader } from "@/components/shared/section-header";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useCategories, useExpenses } from "@/hooks/use-expenses";
@@ -90,56 +88,62 @@ export function ExpensesView() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">Expenses</h2>
-          <p className="text-muted-foreground text-sm">
-            Shared costs members paid out of pocket. Approved expenses become reimbursements.
-          </p>
-        </div>
-        {addButton}
-      </div>
+      <SectionHeader
+        title="Expenses"
+        description="Shared costs members paid out of pocket. Approved expenses become reimbursements."
+        action={addButton}
+      />
 
-      {/* 5 filters here, so a slightly different grid than FilterBar. */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(5,minmax(0,1fr))_auto] lg:items-end">
-        <FilterSelect
-          id="expense-status"
-          label="Status"
-          value={filters.status}
-          onChange={(v) => update({ status: v })}
-          options={STATUSES}
-        />
-        <FilterSelect
-          id="expense-category"
-          label="Category"
-          allLabel="All categories"
-          value={filters.categoryId}
-          onChange={(v) => update({ category: v })}
-          options={(categories.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
-        />
-        <FilterSelect
-          id="expense-member"
-          label="Paid by"
-          allLabel="Everyone"
-          value={filters.submittedBy}
-          onChange={(v) => update({ member: v })}
-          options={memberOptions}
-        />
-        <DateRangeFilter idPrefix="expense" from={filters.from} to={filters.to} onChange={update} />
-        {isFiltered && (
-          <ClearFiltersButton
-            onClick={() =>
-              update({
-                status: undefined,
-                category: undefined,
-                member: undefined,
-                from: undefined,
-                to: undefined,
-              })
-            }
-          />
-        )}
-      </div>
+      <ListToolbar
+        status={{
+          label: "Status",
+          value: filters.status,
+          onChange: (v) => update({ status: v }),
+          options: STATUSES,
+        }}
+        toggle={
+          user
+            ? {
+                label: "Mine",
+                active: filters.submittedBy === user.id,
+                onToggle: () =>
+                  update({ member: filters.submittedBy === user.id ? undefined : user.id }),
+              }
+            : undefined
+        }
+        filters={
+          <>
+            <FilterSelect
+              id="expense-category"
+              label="Category"
+              allLabel="All categories"
+              value={filters.categoryId}
+              onChange={(v) => update({ category: v })}
+              options={(categories.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+            />
+            <FilterSelect
+              id="expense-member"
+              label="Paid by"
+              allLabel="Everyone"
+              value={filters.submittedBy}
+              onChange={(v) => update({ member: v })}
+              options={memberOptions}
+            />
+            <DateRangeFilter
+              idPrefix="expense"
+              from={filters.from}
+              to={filters.to}
+              onChange={update}
+            />
+          </>
+        }
+        activeFilterCount={
+          [filters.categoryId, filters.submittedBy, filters.from, filters.to].filter(Boolean).length
+        }
+        onClearFilters={() =>
+          update({ category: undefined, member: undefined, from: undefined, to: undefined })
+        }
+      />
 
       {expenses.isError ? (
         <FormError message={normalizeError(expenses.error).message} />

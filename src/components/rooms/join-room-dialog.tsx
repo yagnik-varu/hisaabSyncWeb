@@ -9,16 +9,12 @@ import { useForm } from "react-hook-form";
 
 import { FormError } from "@/components/shared/form-error";
 import { TextField } from "@/components/shared/form-fields";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/components/shared/responsive-dialog";
+import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { useJoinRoom } from "@/hooks/use-rooms";
@@ -79,54 +75,68 @@ export function JoinRoomDialog({ trigger }: { trigger: React.ReactNode }) {
     });
   }
 
+  const title =
+    result?.kind === "requested"
+      ? "Request sent"
+      : result?.kind === "member"
+        ? "You're already a member"
+        : "Join a room";
+  const description =
+    result === null ? "Ask a room admin for the room code, then enter it here." : undefined;
+
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
-        {result?.kind === "requested" ? (
-          <>
-            <DialogHeader>
-              <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-amber-500/10">
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      trigger={trigger}
+      dismissible={!joinRoom.isPending}
+      className="sm:max-w-sm"
+      title={title}
+      description={description}
+    >
+      {result?.kind === "requested" ? (
+        <>
+          <ResponsiveDialogBody>
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-500/10">
                 <ClockIcon className="size-5 text-amber-600" />
               </div>
-              <DialogTitle>Request sent</DialogTitle>
-              <DialogDescription>
-                Your request to join <span className="font-mono font-medium">{result.code}</span> is
+              <p className="text-muted-foreground text-sm">
+                Your request to join{" "}
+                <span className="text-foreground font-mono font-medium">{result.code}</span> is
                 waiting for an admin. The room will appear in your list once approved.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button onClick={() => handleOpenChange(false)}>Done</Button>
-            </DialogFooter>
-          </>
-        ) : result?.kind === "member" ? (
-          <>
-            <DialogHeader>
-              <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-emerald-500/10">
+              </p>
+            </div>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
+            <Button onClick={() => handleOpenChange(false)}>Done</Button>
+          </ResponsiveDialogFooter>
+        </>
+      ) : result?.kind === "member" ? (
+        <>
+          <ResponsiveDialogBody>
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
                 <CircleCheckIcon className="size-5 text-emerald-600" />
               </div>
-              <DialogTitle>You&apos;re already a member</DialogTitle>
-              <DialogDescription>
-                You already belong to <span className="font-medium">{result.room.name}</span>.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button asChild>
-                <Link href={`/rooms/${result.room.id}`} onClick={() => handleOpenChange(false)}>
-                  Open room
-                </Link>
-              </Button>
-            </DialogFooter>
-          </>
-        ) : (
-          <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-            <DialogHeader>
-              <DialogTitle>Join a room</DialogTitle>
-              <DialogDescription>
-                Ask a room admin for the room code, then enter it here.
-              </DialogDescription>
-            </DialogHeader>
-            <FieldGroup className="py-4">
+              <p className="text-muted-foreground text-sm">
+                You already belong to{" "}
+                <span className="text-foreground font-medium">{result.room.name}</span>.
+              </p>
+            </div>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
+            <Button asChild>
+              <Link href={`/rooms/${result.room.id}`} onClick={() => handleOpenChange(false)}>
+                Open room
+              </Link>
+            </Button>
+          </ResponsiveDialogFooter>
+        </>
+      ) : (
+        <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="contents">
+          <ResponsiveDialogBody>
+            <FieldGroup>
               <FormError message={errors.root?.server?.message} />
               <TextField
                 control={form.control}
@@ -134,26 +144,28 @@ export function JoinRoomDialog({ trigger }: { trigger: React.ReactNode }) {
                 label="Room code"
                 placeholder="FLAT402"
                 autoComplete="off"
-                inputClassName="font-mono uppercase tracking-widest"
+                autoCapitalize="characters"
+                enterKeyHint="go"
+                inputClassName="h-14 text-center font-mono text-2xl tracking-[0.3em] uppercase md:h-12 md:text-xl"
               />
             </FieldGroup>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-                disabled={joinRoom.isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={joinRoom.isPending}>
-                {joinRoom.isPending && <Spinner />}
-                Send request
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={joinRoom.isPending}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={joinRoom.isPending}>
+              {joinRoom.isPending && <Spinner />}
+              Send request
+            </Button>
+          </ResponsiveDialogFooter>
+        </form>
+      )}
+    </ResponsiveDialog>
   );
 }

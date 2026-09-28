@@ -19,6 +19,10 @@ interface TextFieldProps<T extends FieldValues> {
   labelAction?: React.ReactNode;
   /** Extra classes for the <input> itself. */
   inputClassName?: string;
+  /** Override the mobile keyboard's auto-capitalization (e.g. "characters" for room codes). */
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  /** Mobile keyboard "enter" key label. */
+  enterKeyHint?: "next" | "done" | "go" | "send" | "search";
 }
 
 /**
@@ -36,7 +40,11 @@ export function TextField<T extends FieldValues>({
   disabled,
   labelAction,
   inputClassName,
+  autoCapitalize,
+  enterKeyHint,
 }: TextFieldProps<T>) {
+  // Phones: never auto-capitalize/autocorrect emails, links, passwords or codes.
+  const literal = type === "email" || type === "url" || type === "password";
   const id = `field-${name}`;
   return (
     <Controller
@@ -51,6 +59,18 @@ export function TextField<T extends FieldValues>({
           autoComplete,
           disabled,
           className: inputClassName,
+          autoCapitalize: autoCapitalize ?? (literal ? "none" : undefined),
+          autoCorrect: literal || autoCapitalize === "characters" ? "off" : undefined,
+          spellCheck: literal || autoCapitalize === "characters" ? false : undefined,
+          inputMode:
+            type === "tel"
+              ? ("tel" as const)
+              : type === "url"
+                ? ("url" as const)
+                : type === "email"
+                  ? ("email" as const)
+                  : undefined,
+          enterKeyHint,
           "aria-invalid": fieldState.invalid,
           "aria-describedby": description ? `${id}-description` : undefined,
         };

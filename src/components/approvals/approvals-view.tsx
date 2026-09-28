@@ -11,6 +11,7 @@ import { useCurrentRoom } from "@/components/rooms/room-context";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FormError } from "@/components/shared/form-error";
 import { Money } from "@/components/shared/money";
+import { SectionHeader } from "@/components/shared/section-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContributions } from "@/hooks/use-contributions";
 import { useExpenses } from "@/hooks/use-expenses";
@@ -77,12 +78,10 @@ export function ApprovalsView() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">Approvals</h2>
-        <p className="text-muted-foreground text-sm">
-          Everything waiting for an admin or accountant.
-        </p>
-      </div>
+      <SectionHeader
+        title="Approvals"
+        description="Everything waiting for an admin or accountant."
+      />
 
       <Tabs value={tab} onValueChange={(v) => update({ tab: v, open: undefined })}>
         <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">

@@ -16,6 +16,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useCurrentRoom } from "@/components/rooms/room-context";
+import { useApprovalCounts } from "@/hooks/use-approval-counts";
 import type { Permission } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
@@ -39,14 +40,13 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 /**
- * Room section tabs. One horizontal, scrollable strip works on both desktop and phones
- * (no separate mobile menu to keep in sync).
+ * Room section tabs for tablets/desktop (md+). Phones use RoomBottomNav instead.
  */
 export function RoomNav() {
-  const { roomId, room, can } = useCurrentRoom();
+  const { roomId, can } = useCurrentRoom();
   const pathname = usePathname();
   const base = `/rooms/${roomId}`;
-  const pendingApprovals = room.pendingContributionsCount + room.pendingExpensesCount;
+  const { total: pendingApprovals } = useApprovalCounts();
 
   return (
     <nav className="-mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6" aria-label="Room sections">

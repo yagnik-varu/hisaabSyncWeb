@@ -10,7 +10,7 @@ export default async function RegisterPage({ searchParams }: PageProps<"/registe
   const loginHref = typeof next === "string" ? `/login?next=${encodeURIComponent(next)}` : "/login";
 
   return (
-    <Card>
+    <Card className="max-sm:border-0 max-sm:bg-transparent max-sm:py-0 max-sm:shadow-none max-sm:ring-0">
       <CardHeader>
         <CardTitle className="text-xl">Create your account</CardTitle>
         <CardDescription>Pool money with your roommates, transparently.</CardDescription>

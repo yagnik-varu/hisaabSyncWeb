@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import { InviteButton } from "@/components/rooms/invite-button";
+import { RoomBottomNav } from "@/components/rooms/room-bottom-nav";
 import { RoomProvider } from "@/components/rooms/room-context";
 import { RoomNav } from "@/components/rooms/room-nav";
 import { RoleBadge, RoomStatusBadge } from "@/components/shared/badges";
@@ -92,8 +94,11 @@ export function RoomShell({ roomId, children }: { roomId: string; children: Reac
 
   return (
     <RoomProvider room={details} isArchived={isArchived}>
-      <div className="space-y-4">
-        <div className="space-y-1">
+      {/* pb: keep content clear of the phone bottom nav (+ home indicator) */}
+      <div className="space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
+        {/* Desktop room header. On phones the room name lives in the app header and the
+            overview page shows its own compact hero, so content starts immediately. */}
+        <div className="hidden space-y-1 md:block">
           <Link
             href="/rooms"
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
@@ -117,6 +122,7 @@ export function RoomShell({ roomId, children }: { roomId: string; children: Reac
               successMessage="Room code copied. Share it with people you want to invite."
               className="size-7"
             />
+            <InviteButton variant="ghost" size="sm" className="ml-1" />
           </div>
           {details.description && (
             <p className="text-muted-foreground max-w-2xl text-sm">{details.description}</p>
@@ -130,9 +136,12 @@ export function RoomShell({ roomId, children }: { roomId: string; children: Reac
           </Alert>
         )}
 
-        <RoomNav />
-        <div className="pt-2">{children}</div>
+        <div className="hidden md:block">
+          <RoomNav />
+        </div>
+        <div className="md:pt-2">{children}</div>
       </div>
+      <RoomBottomNav />
     </RoomProvider>
   );
 }

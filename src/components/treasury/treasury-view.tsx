@@ -5,16 +5,13 @@ import { useMemo } from "react";
 
 import { useCurrentRoom } from "@/components/rooms/room-context";
 import { FormError } from "@/components/shared/form-error";
-import {
-  ClearFiltersButton,
-  DateRangeFilter,
-  FilterBar,
-  FilterSelect,
-} from "@/components/shared/list-filters";
+import { DateRangeFilter, FilterSelect } from "@/components/shared/list-filters";
 import { PaginationBar } from "@/components/shared/pagination-bar";
+import { SectionHeader } from "@/components/shared/section-header";
+import { ListToolbar } from "@/components/shared/list-toolbar";
 import { AdjustmentDialog } from "@/components/treasury/adjustment-dialog";
 import { LedgerTable } from "@/components/treasury/ledger-table";
-import { TreasurySummaryCards } from "@/components/treasury/treasury-summary-cards";
+import { BalanceHero } from "@/components/treasury/balance-hero";
 import { Button } from "@/components/ui/button";
 import { useRoomMembers, useTransactions } from "@/hooks/use-treasury";
 import { oneOf, useResetEmptyPage, useUrlFilters } from "@/hooks/use-url-filters";
@@ -64,61 +61,60 @@ export function TreasuryView() {
 
   return (
     <div className="space-y-6">
-      <TreasurySummaryCards />
+      <BalanceHero className="md:max-w-xl" />
 
       <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">Ledger</h2>
-            <p className="text-muted-foreground text-sm">
-              Every change to the balance, newest first. Entries can never be edited or deleted.
-            </p>
-          </div>
-          {can("treasury.adjust") && !isArchived && (
-            <AdjustmentDialog
-              trigger={
-                <Button variant="outline">
-                  <ScaleIcon />
-                  Manual adjustment
-                </Button>
-              }
-            />
-          )}
-        </div>
+        <SectionHeader
+          title="Ledger"
+          description="Every change to the balance, newest first. Entries can never be edited or deleted."
+          action={
+            can("treasury.adjust") && !isArchived ? (
+              <AdjustmentDialog
+                trigger={
+                  <Button variant="outline">
+                    <ScaleIcon />
+                    <span className="md:hidden">Adjust</span>
+                    <span className="hidden md:inline">Manual adjustment</span>
+                  </Button>
+                }
+              />
+            ) : undefined
+          }
+        />
 
-        <FilterBar>
-          <FilterSelect
-            id="ledger-type"
-            label="Direction"
-            value={filters.transactionType}
-            onChange={(v) => update({ type: v })}
-            options={[
-              { value: "CREDIT", label: "Money in (credit)" },
-              { value: "DEBIT", label: "Money out (debit)" },
-            ]}
-          />
-          <FilterSelect
-            id="ledger-ref"
-            label="Source"
-            allLabel="All sources"
-            value={filters.referenceType}
-            onChange={(v) => update({ ref: v })}
-            options={REF_TYPES.map((ref) => ({ value: ref, label: REFERENCE_LABELS[ref] }))}
-          />
-          <DateRangeFilter
-            idPrefix="ledger"
-            from={filters.from}
-            to={filters.to}
-            onChange={update}
-          />
-          {isFiltered && (
-            <ClearFiltersButton
-              onClick={() =>
-                update({ type: undefined, ref: undefined, from: undefined, to: undefined })
-              }
-            />
-          )}
-        </FilterBar>
+        <ListToolbar
+          status={{
+            label: "Direction",
+            value: filters.transactionType,
+            onChange: (v) => update({ type: v }),
+            options: [
+              { value: "CREDIT", label: "Money in" },
+              { value: "DEBIT", label: "Money out" },
+            ],
+          }}
+          filters={
+            <>
+              <FilterSelect
+                id="ledger-ref"
+                label="Source"
+                allLabel="All sources"
+                value={filters.referenceType}
+                onChange={(v) => update({ ref: v })}
+                options={REF_TYPES.map((ref) => ({ value: ref, label: REFERENCE_LABELS[ref] }))}
+              />
+              <DateRangeFilter
+                idPrefix="ledger"
+                from={filters.from}
+                to={filters.to}
+                onChange={update}
+              />
+            </>
+          }
+          activeFilterCount={
+            [filters.referenceType, filters.from, filters.to].filter(Boolean).length
+          }
+          onClearFilters={() => update({ ref: undefined, from: undefined, to: undefined })}
+        />
 
         {transactions.isError ? (
           <FormError message={normalizeError(transactions.error).message} />

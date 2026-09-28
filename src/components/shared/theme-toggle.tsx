@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
  * Light/dark toggle. Icons swap purely via CSS (`dark:` variants), so the server-rendered
  * markup matches the client and there's no hydration mismatch before the theme is known.
  */
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
 
   return (
@@ -17,6 +17,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       aria-label="Toggle theme"
+      className={className}
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
       <SunIcon className="size-4 scale-100 rotate-0 transition-transform dark:scale-0 dark:-rotate-90" />

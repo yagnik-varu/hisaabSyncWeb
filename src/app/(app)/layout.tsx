@@ -22,7 +22,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           </div>
           <div className="flex items-center gap-1">
             <NotificationBell />
-            <ThemeToggle />
+            <ThemeToggle className="hidden md:inline-flex" />
             <UserMenu />
           </div>
         </div>
@@ -30,7 +30,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       <main
         id="main"
         tabIndex={-1}
-        className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6 outline-none sm:px-6"
+        className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-4 outline-none sm:px-6 md:py-6"
       >
         <AuthGate>{children}</AuthGate>
       </main>

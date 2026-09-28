@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-media-query";
 import { useNotificationMutations, useUnreadNotifications } from "@/hooks/use-notifications";
 
 const SHOWN = 6;
@@ -24,10 +25,29 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const { unread, unreadCount, bulkReadAllSafe } = useUnreadNotifications();
   const { markAllRead } = useNotificationMutations();
+  const isMobile = useIsMobile();
 
   if (status !== "authenticated") return null;
 
   const badge = unreadCount > 99 ? "99+" : String(unreadCount);
+  const label = unreadCount ? `Notifications, ${unreadCount} unread` : "Notifications";
+  const badgeEl = unreadCount > 0 && (
+    <span className="bg-destructive absolute top-0.5 right-0.5 min-w-4 rounded-full px-1 text-[10px] leading-4 font-semibold text-white tabular-nums md:-top-0.5 md:-right-0.5">
+      {badge}
+    </span>
+  );
+
+  // Phones: a dropdown full of notifications is cramped. Go straight to the full page.
+  if (isMobile) {
+    return (
+      <Button asChild variant="ghost" size="icon" className="relative">
+        <Link href="/notifications" aria-label={label}>
+          <BellIcon />
+          {badgeEl}
+        </Link>
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>

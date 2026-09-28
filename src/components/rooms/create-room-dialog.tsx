@@ -8,16 +8,12 @@ import { toast } from "sonner";
 
 import { FormError } from "@/components/shared/form-error";
 import { TextField } from "@/components/shared/form-fields";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/components/shared/responsive-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldContent,
@@ -59,7 +55,7 @@ export function CreateRoomDialog({ trigger }: { trigger: React.ReactNode }) {
   const { errors } = form.formState;
 
   function handleOpenChange(next: boolean) {
-    if (createRoom.isPending) return; // don't close mid-request
+    if (createRoom.isPending) return;
     setOpen(next);
     if (!next) form.reset(DEFAULTS);
   }
@@ -90,18 +86,17 @@ export function CreateRoomDialog({ trigger }: { trigger: React.ReactNode }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-          <DialogHeader>
-            <DialogTitle>Create a room</DialogTitle>
-            <DialogDescription>
-              A room has one shared treasury. You&apos;ll be its admin.
-            </DialogDescription>
-          </DialogHeader>
-
-          <FieldGroup className="py-4">
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      trigger={trigger}
+      dismissible={!createRoom.isPending}
+      title="Create a room"
+      description="A room has one shared treasury. You'll be its admin."
+    >
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="contents">
+        <ResponsiveDialogBody>
+          <FieldGroup>
             <FormError message={errors.root?.server?.message} />
 
             <TextField
@@ -110,6 +105,7 @@ export function CreateRoomDialog({ trigger }: { trigger: React.ReactNode }) {
               label="Room name"
               placeholder="Flat 402"
               autoComplete="off"
+              autoCapitalize="words"
             />
 
             <Controller
@@ -117,7 +113,10 @@ export function CreateRoomDialog({ trigger }: { trigger: React.ReactNode }) {
               name="description"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="room-description">Description (optional)</FieldLabel>
+                  <FieldLabel htmlFor="room-description">
+                    Description{" "}
+                    <span className="text-muted-foreground font-normal">(optional)</span>
+                  </FieldLabel>
                   <Textarea
                     {...field}
                     id="room-description"
@@ -175,23 +174,22 @@ export function CreateRoomDialog({ trigger }: { trigger: React.ReactNode }) {
               )}
             />
           </FieldGroup>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={createRoom.isPending}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createRoom.isPending}>
-              {createRoom.isPending && <Spinner />}
-              Create room
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={createRoom.isPending}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={createRoom.isPending}>
+            {createRoom.isPending && <Spinner />}
+            Create room
+          </Button>
+        </ResponsiveDialogFooter>
+      </form>
+    </ResponsiveDialog>
   );
 }

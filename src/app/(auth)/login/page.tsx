@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     typeof next === "string" ? `/register?next=${encodeURIComponent(next)}` : "/register";
 
   return (
-    <Card>
+    <Card className="max-sm:border-0 max-sm:bg-transparent max-sm:py-0 max-sm:shadow-none max-sm:ring-0">
       <CardHeader>
         <CardTitle className="text-xl">Welcome back</CardTitle>
         <CardDescription>Sign in to manage your room treasuries.</CardDescription>

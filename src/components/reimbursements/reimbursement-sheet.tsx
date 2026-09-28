@@ -18,6 +18,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-media-query";
 import { useReimbursement } from "@/hooks/use-reimbursements";
 import { normalizeError } from "@/lib/api/errors";
 import { formatDateTime } from "@/lib/dates";
@@ -34,12 +35,20 @@ export function ReimbursementSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const { roomId, currencyCode } = useCurrentRoom();
+  const isMobile = useIsMobile();
   const details = useReimbursement(roomId, reimbursementId);
   const r = details.data;
 
   return (
     <Sheet open={!!reimbursementId} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md">
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        className={
+          isMobile
+            ? "max-h-[88dvh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]"
+            : "w-full sm:max-w-md"
+        }
+      >
         <SheetHeader>
           <SheetTitle>Reimbursement</SheetTitle>
           <SheetDescription>
@@ -105,7 +114,7 @@ export function ReimbursementSheet({
                 )}
               </dl>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap [&>*:only-child]:col-span-2">
                 <PayReimbursementButton reimbursement={r} size="default" />
                 <Button asChild variant="outline">
                   <Link href={`/rooms/${roomId}/expenses/${r.expense.id}`}>

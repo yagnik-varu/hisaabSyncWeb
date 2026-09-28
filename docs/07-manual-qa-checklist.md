@@ -64,6 +64,17 @@ Tick each box; note anything odd in `PROGRESS.md` → Known issues.
 - [ ] Clicking a notification marks it read and opens the right page
 - [ ] While backend #1 is unfixed: the notifications page shows the "other people's notifications" notice
 
+## 8b. Mobile (test on a real phone, not just DevTools)
+- [ ] Bottom bar: Home / Expenses / + / Approvals (approver) or Payouts (member) / More; the active tab is highlighted; the Approvals badge counts contributions + expenses + payouts + joins
+- [ ] "+" → action sheet → Add money opens a bottom sheet with the decimal keypad; quick chips fill the amount; the Submit button stays visible above the keyboard
+- [ ] Log expense: category chips are tappable; the receipt field doesn't auto-capitalize
+- [ ] Sheets drag down to close, but not while saving
+- [ ] Lists: Approve/Reject are full-width, Approve on the right; the row date is under the amount
+- [ ] Filters button opens a sheet; the badge shows the active count; chips scroll sideways
+- [ ] Invite opens the phone share sheet (WhatsApp etc.)
+- [ ] Notch/home-indicator phones: the bottom bar isn't covered; nothing hides behind it at the end of a page
+- [ ] Join-room code field shows the capital-letters keyboard
+
 ## 9. Polish (Phase 9)
 - [ ] Stop the backend → amber banner appears on the next request; start it → banner disappears, data refreshes, toast
 - [ ] DevTools offline → "You're offline" banner

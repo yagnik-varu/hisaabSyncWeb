@@ -8,27 +8,19 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { useCurrentRoom } from "@/components/rooms/room-context";
+import { AmountField } from "@/components/shared/amount-field";
+import { ChoiceChips } from "@/components/shared/choice-chips";
 import { FormError } from "@/components/shared/form-error";
 import { TextField } from "@/components/shared/form-fields";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+} from "@/components/shared/responsive-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategories, useExpenseMutations } from "@/hooks/use-expenses";
@@ -44,10 +36,22 @@ const DEFAULTS: ExpenseValues = {
   receiptUrl: "",
 };
 
-/** "Log a shared expense" — something you paid for out of pocket that the pool should pay back. */
-export function SubmitExpenseDialog({ trigger }: { trigger: React.ReactNode }) {
+/**
+ * "Log a shared expense" — something you paid for out of pocket that the pool should pay back.
+ * Bottom sheet on phones. Amount first (big, decimal keypad), category as one-tap chips.
+ */
+export function SubmitExpenseDialog({
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const { roomId, currencyCode, can } = useCurrentRoom();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
   const categories = useCategories(roomId);
   const { submit } = useExpenseMutations(roomId);
 
@@ -57,6 +61,11 @@ export function SubmitExpenseDialog({ trigger }: { trigger: React.ReactNode }) {
   });
   const { errors } = form.formState;
   const noCategories = categories.isSuccess && categories.data.length === 0;
+
+  function setOpen(next: boolean) {
+    if (controlledOpen === undefined) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  }
 
   function handleOpenChange(next: boolean) {
     if (submit.isPending) return;
@@ -92,18 +101,18 @@ export function SubmitExpenseDialog({ trigger }: { trigger: React.ReactNode }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-        <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-          <DialogHeader>
-            <DialogTitle>Log a shared expense</DialogTitle>
-            <DialogDescription>
-              Paid for something the room shares? Once approved, the treasury owes you this amount.
-            </DialogDescription>
-          </DialogHeader>
-
-          <FieldGroup className="py-4">
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      trigger={trigger}
+      dismissible={!submit.isPending}
+      className="sm:max-w-lg"
+      title="Log a shared expense"
+      description="Paid for something the room shares? Once approved, the treasury owes you this amount."
+    >
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="contents">
+        <ResponsiveDialogBody>
+          <FieldGroup>
             <FormError message={errors.root?.server?.message} />
 
             {noCategories && (
@@ -122,6 +131,8 @@ export function SubmitExpenseDialog({ trigger }: { trigger: React.ReactNode }) {
               </Alert>
             )}
 
+            <AmountField control={form.control} name="amount" currencyCode={currencyCode} />
+
             <TextField
               control={form.control}
               name="title"
@@ -130,46 +141,30 @@ export function SubmitExpenseDialog({ trigger }: { trigger: React.ReactNode }) {
               autoComplete="off"
             />
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField
-                control={form.control}
-                name="amount"
-                label={`Amount (${currencyCode})`}
-                placeholder="1450.00"
-                autoComplete="off"
-                inputClassName="tabular-nums"
-              />
-              <Controller
-                control={form.control}
-                name="categoryId"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="expense-category">Category</FieldLabel>
-                    <Select
+            <Controller
+              control={form.control}
+              name="categoryId"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel id="expense-category-label">Category</FieldLabel>
+                  {categories.isPending ? (
+                    <div className="flex gap-2">
+                      <Skeleton className="h-9 w-20 rounded-full" />
+                      <Skeleton className="h-9 w-24 rounded-full" />
+                      <Skeleton className="h-9 w-20 rounded-full" />
+                    </div>
+                  ) : (
+                    <ChoiceChips
+                      labelledBy="expense-category-label"
                       value={field.value}
-                      onValueChange={field.onChange}
-                      disabled={categories.isPending || noCategories}
-                    >
-                      <SelectTrigger
-                        id="expense-category"
-                        className="w-full"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue placeholder={categories.isPending ? "Loading…" : "Choose…"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.data?.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FieldError errors={[fieldState.error]} />
-                  </Field>
-                )}
-              />
-            </div>
+                      onChange={field.onChange}
+                      options={(categories.data ?? []).map((c) => ({ value: c.id, label: c.name }))}
+                    />
+                  )}
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
 
             <Controller
               control={form.control}
@@ -201,23 +196,22 @@ export function SubmitExpenseDialog({ trigger }: { trigger: React.ReactNode }) {
               description="Uploads aren't supported yet. Paste a link to a photo (Google Drive, Photos…)."
             />
           </FieldGroup>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={submit.isPending}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submit.isPending || noCategories}>
-              {submit.isPending && <Spinner />}
-              Submit expense
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={submit.isPending}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={submit.isPending || noCategories}>
+            {submit.isPending && <Spinner />}
+            Submit expense
+          </Button>
+        </ResponsiveDialogFooter>
+      </form>
+    </ResponsiveDialog>
   );
 }

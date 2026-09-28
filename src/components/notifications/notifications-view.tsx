@@ -41,10 +41,10 @@ export function NotificationsView() {
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 sm:items-end">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground hidden text-sm sm:block">
             Updates about your rooms: approvals, payouts and join requests.
           </p>
         </div>
@@ -56,7 +56,8 @@ export function NotificationsView() {
           }
         >
           <CheckCheckIcon />
-          Mark all read
+          <span className="sm:hidden">Read all</span>
+          <span className="hidden sm:inline">Mark all read</span>
         </Button>
       </div>
 
