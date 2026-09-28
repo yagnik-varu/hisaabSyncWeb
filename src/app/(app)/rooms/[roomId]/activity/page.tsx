@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { ActivityView } from "@/components/activity/activity-view";
 
 export const metadata: Metadata = { title: "Activity" };
 
-export default function Page() {
-  return <ComingSoon title="Activity" phase={8} />;
+export default function ActivityPage() {
+  return (
+    <Suspense>
+      <ActivityView />
+    </Suspense>
+  );
 }

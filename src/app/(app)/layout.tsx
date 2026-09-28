@@ -1,12 +1,12 @@
 import { AuthGate } from "@/components/auth/guards";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { UserMenu } from "@/components/auth/user-menu";
 import { RoomSwitcher } from "@/components/rooms/room-switcher";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 
 /**
- * Shell for every signed-in page: logo, room switcher, theme toggle, user menu.
- * (Notifications bell arrives with Phase 8.)
+ * Shell for every signed-in page: logo, room switcher, notifications bell, theme toggle, user menu.
  */
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
@@ -19,6 +19,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
             <RoomSwitcher />
           </div>
           <div className="flex items-center gap-1">
+            <NotificationBell />
             <ThemeToggle />
             <UserMenu />
           </div>
