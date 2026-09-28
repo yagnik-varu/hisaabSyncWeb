@@ -26,6 +26,8 @@ export interface ConfirmReasonOptions {
   maxLength?: number;
   /** Minimum characters when required (default 3). */
   minLength?: number;
+  /** Help text under the field. Default explains the reason is shown to the submitter; null hides it. */
+  description?: string | null;
 }
 
 /**
@@ -33,10 +35,14 @@ export interface ConfirmReasonOptions {
  * - Stays open while `onConfirm` runs and shows its error inline (no silent failures).
  * - Closes itself on success.
  * - Optional reason textarea (e.g. rejection reason), required or optional.
+ * - Uncontrolled (pass `trigger`) or controlled (pass `open` + `onOpenChange`, e.g. opened from a
+ *   dropdown menu item, which unmounts as soon as the menu closes).
  * Uses a plain Button instead of AlertDialogAction because Action closes immediately on click.
  */
 export function ConfirmDialog({
   trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   title,
   description,
   confirmLabel,
@@ -46,7 +52,9 @@ export function ConfirmDialog({
   children,
   onConfirm,
 }: {
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: string;
   description?: React.ReactNode;
   confirmLabel: string;
@@ -58,7 +66,13 @@ export function ConfirmDialog({
   children?: React.ReactNode;
   onConfirm: (reason: string | undefined) => Promise<unknown>;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setUncontrolledOpen(next);
+    controlledOnOpenChange?.(next);
+  };
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [text, setText] = useState("");
@@ -97,7 +111,7 @@ export function ConfirmDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -123,7 +137,11 @@ export function ConfirmDialog({
               onChange={(e) => setText(e.target.value)}
               disabled={pending}
             />
-            <FieldDescription>Shown to the person who submitted it.</FieldDescription>
+            {reason.description !== null && (
+              <FieldDescription>
+                {reason.description ?? "Shown to the person who submitted it."}
+              </FieldDescription>
+            )}
           </Field>
         )}
 
