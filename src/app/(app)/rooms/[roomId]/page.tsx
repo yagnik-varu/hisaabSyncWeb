@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 
 import { ActivityList } from "@/components/activity/activity-list";
+import { SubmitContributionDialog } from "@/components/contributions/submit-contribution-dialog";
 import { useCurrentRoom } from "@/components/rooms/room-context";
 import { FormError } from "@/components/shared/form-error";
 import { TreasurySummaryCards } from "@/components/treasury/treasury-summary-cards";
@@ -109,10 +110,13 @@ export default function RoomOverviewPage() {
             <CardContent className="grid gap-2">
               {!isArchived && (
                 <>
-                  <QuickLink
-                    href={`${base}/contributions`}
-                    icon={HandCoinsIcon}
-                    label="Add money to the pool"
+                  <SubmitContributionDialog
+                    trigger={
+                      <Button variant="outline" className="justify-start">
+                        <HandCoinsIcon />
+                        Add money to the pool
+                      </Button>
+                    }
                   />
                   <QuickLink
                     href={`${base}/expenses`}

@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { ContributionsView } from "@/components/contributions/contributions-view";
 
 export const metadata: Metadata = { title: "Contributions" };
 
-export default function Page() {
-  return <ComingSoon title="Contributions" phase={4} />;
+export default function ContributionsPage() {
+  return (
+    <Suspense>
+      <ContributionsView />
+    </Suspense>
+  );
 }

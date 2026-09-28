@@ -11,7 +11,7 @@ Last updated: `2026-09-28` — Phase 0 complete.
 - [x] **Phase 1** — BFF `app/api/auth/*` (hs_rt + hs_session cookies), `lib/auth/{constants,server,session}`, `useAuth`, `AuthProvider`, `AuthGate`/`RedirectIfAuthenticated`, `src/proxy.ts`, login/register (+ Google button when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is set), profile + change password, minimal app header with user menu, `/status` public page, placeholder `/rooms`
 - [x] **Phase 2** — My Rooms (Active/Archived tabs + pagination in URL, cards, empty states), create-room and join-by-code dialogs, header room switcher, room shell (`RoomShell` + `useCurrentRoom()` context, header with copyable code, role-aware scrollable nav with pending-approvals badge, archived banner, not-found/403/unreachable states), basic overview stat cards, placeholder pages for later sections; shared `badges`, `EmptyState`, `PaginationBar`, `CopyButton`, `Money`
 - [x] **Phase 3** — Overview (treasury summary cards, recent activity, needs-attention with pending counts, quick actions), Treasury page (summary, ledger with direction/source/date filters in URL + pagination, readable descriptions, admin manual adjustment dialog with balance preview + strict-mode warning); reusable `ActivityList`, `TreasurySummaryCards`; `lib/{dates,ledger,activity}`, `schemas/treasury` (`amountField` for all money inputs)
-- [ ] **Phase 4** — Contributions
+- [x] **Phase 4** — Contributions page (status/member/date filters in URL, pagination, table with note + rejection reason, "(you)" markers), submit dialog (also on the overview quick action), row actions: approve/reject (optional reason) for approvers and cancel-own, with an own-item approval warning; shared `ConfirmDialog` (async, inline errors, optional/required reason), `useUrlFilters` + `oneOf`/`uuidParam`, `list-filters` (`FilterSelect`, `DateRangeFilter`, `FilterBar`, `ClearFiltersButton`); treasury view refactored onto them
 - [ ] **Phase 5** — Categories & expenses
 - [ ] **Phase 6** — Reimbursements & approvals inbox
 - [ ] **Phase 7** — Members & room administration
@@ -19,7 +19,7 @@ Last updated: `2026-09-28` — Phase 0 complete.
 - [ ] **Phase 9** — Polish & ship
 
 ## 2. Current focus
-**Next:** Phase 4: contributions (list/filters, submit, cancel own, approve/reject). Reuse `amountField`, `StatusBadge`, `PaginationBar`, and the URL-filter pattern from `treasury-view.tsx`.
+**Next:** Phase 5: categories and expenses. Reuse `ConfirmDialog` (expense reject reason is **required**, ≤500), `useUrlFilters`, `list-filters`, `amountField`, and the `useContributionMutations` invalidation pattern. Remember the async reimbursement after approve (docs/05 #9).
 **Pending backend work (user to apply):** **Patch A** in `docs/05` (#3/#4 room fields). Claude's file tools can't write outside this folder, so run `/add-dir D:\yagnik-deploy\HisaabSync` to let Claude apply backend fixes. #17 (refresh-token hashing) is security-critical.
 **Phase 2 verification:** checked with curl against the local backend: list/create/details/join, invalid code 404, non-UUID 500 (#19), and a member joining their own room (#18). All room pages return 200 with a session cookie. Test room "Phase 2 Test Room" (code `5OIS0I`) exists, owned by the test account, with one stray PENDING join request from test #18.
 **Verification gap:** Phase 1 BFF flows were verified with curl against the local backend (register, duplicate email, wrong password, proxy redirects, CSRF origin block, refresh rotation, profile update/null-clear, change-password error, logout revocation). The in-browser UI flow (forms, bootstrap after reload, cross-tab logout, Google button) still needs a **manual browser check**.
@@ -48,6 +48,8 @@ Last updated: `2026-09-28` — Phase 0 complete.
 - 2026-09-28 (P3): Date filters are sent as exact instants (start/end of the local day, `lib/dates.ts`) because the backend uses `lte` on dateTo.
 - 2026-09-28 (P3): List filters live in the URL, and `router.replace` + a page reset happen on every filter change (see `treasury-view.tsx`). This is the pattern for Phases 4–8.
 - 2026-09-28 (P3): After money mutations, invalidate `roomDetails`, the `roomTreasury` prefix (includes the ledger), the activity prefix and `rooms()` (see `useCreateAdjustment`).
+- 2026-09-28 (P4): Row actions use one mutation set per row (`ContributionActions`), so pending state is per item. Approve/reject `onError` also invalidates, because "already processed" means the list is stale.
+- 2026-09-28 (P4): Second test account `phase4-member-1790589061@example.com` (MEMBER of the test room, joined via code). Test room balance ₹1,050 (+500 adjustment, +300 admin, +250 member); one rejected (₹100) and one cancelled (₹50) contribution.
 - 2026-09-28 (P3): Test room now has a +₹500 adjustment ("Phase 3 verification: opening float"). The ledger is append-only.
 
 ## 4. Backend fixes status
