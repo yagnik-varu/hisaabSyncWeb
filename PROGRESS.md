@@ -2,7 +2,7 @@
 
 > Read FIRST every session. Update LAST every session. Keep it compact (status + facts).
 
-Last updated: `2026-09-28` — all 10 roadmap phases built; browser QA + deploy pending.
+Last updated: `2026-09-28` — all 10 roadmap phases built + public landing page; browser QA + deploy pending.
 
 ## 1. Phase status (see `docs/04-implementation-roadmap.md`)
 
@@ -18,6 +18,8 @@ Last updated: `2026-09-28` — all 10 roadmap phases built; browser QA + deploy 
 - [x] **Phase 8** — Activity page (timeline with date filters + pagination; admin "Audit log" tab with entity-type filter and expandable metadata, ids resolved to names), notifications bell in the header (45 s polling + focus refetch, unread badge, latest unread, mark read / mark all), notifications page (All/Unread in URL, pagination, per-item mark read); **backend #1 defence**: own-only filtering, leak notice, per-item mark-all fallback (bulk `read-all` only when provably safe), optimistic mark-read
 - [x] **Phase 9** — Error boundaries (root, (app), room section, global-error), not-found page, backend-status banner (network/5xx → pings /health every 5 s → refetch; offline banner), page titles for all routes (client pages split into server wrapper + view), security headers + poweredByHeader off, skip link + main landmarks, compact mobile logo, removed Phase 0 debug output, docs/06-deployment.md + docs/07-manual-qa-checklist.md. **Not done:** deploy (needs your Vercel account) and browser QA (see checklist)
 
+- [x] **Landing page** (post-roadmap) — public `/` for signed-out visitors (`src/components/landing/*`): hero with an animated phone demo of the core loop (chip in → approve → spend → owed → paid back, tappable steps + pause), orbiting flatmates, "made for" marquee, "web of IOUs vs one pool" SVG diagrams, how-it-works steps, features bento, role switcher (docs/02 §3 matrix), FAQ (`<details>`), "hisaab barabar" CTA, footer. Signed-in users are redirected `/` → `/rooms` in `proxy.ts`.
+
 ## 2. Current focus
 **Next:** (1) run `docs/07-manual-qa-checklist.md` in a browser; (2) backend fixes #1, #17, #22, #16 (+ #2, Patch A); (3) deploy per `docs/06-deployment.md`; (4) optional: enforce the CSP, add Playwright smoke tests.
 **Pending backend work (user to apply):** **Patch A** in `docs/05` (#3/#4 room fields). Claude's file tools can't write outside this folder, so run `/add-dir D:\yagnik-deploy\HisaabSync` to let Claude apply backend fixes. #17 (refresh-token hashing) is security-critical.
@@ -26,6 +28,7 @@ Last updated: `2026-09-28` — all 10 roadmap phases built; browser QA + deploy 
 **Test data:** one test account `phase1-test-1790584568@example.com` was created in the dev DB (no delete endpoint; remove via Prisma Studio if wanted).
 
 ## 3. Key decisions
+- 2026-09-28 (Landing): `/` is special-cased in `proxy.ts` (not added to `PUBLIC_PATHS`, since every path "starts with" `/`). Signed out → landing page; `hs_session` cookie → 307 `/rooms`. The auth-layout logo now links to `/`. The page is static server components; only `DemoPhone` and `RoleSwitcher` are client components. Copy stays honest to V1: HisaabSync **records** money, it doesn't move it (FAQ says so); no invented stats/testimonials. Smooth in-page scrolling uses `scroll-behavior: smooth` (reduced-motion aware) + `data-scroll-behavior="smooth"` on `<html>` so route changes still jump instantly (Next 16 change). Verified with Playwright + Edge: screenshots at 360/390/768/1280 (light + dark), no horizontal overflow (measured with `<main>`'s `overflow-x-clip` switched off), 21 interaction checks (demo auto-advance/jump/pause/loop, role switcher, FAQ, anchors, reduced motion), and proxy routing checks. Scripts: scratchpad `landing-shots.js`, `landing-interact.js`, `proxy-check.js`.
 - 2026-09-28: Next.js App Router + Tailwind + shadcn/ui + TanStack Query + RHF/Zod.
 - 2026-09-28: Auth = httpOnly refresh-token cookie via Next route handlers (BFF); access token in memory; browser calls NestJS directly with Bearer.
 - 2026-09-28: API base URL configurable via env, defaults to local `http://localhost:3000/api/v1`.

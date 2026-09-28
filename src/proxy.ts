@@ -24,6 +24,14 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const hasSession = request.cookies.has(SESSION_COOKIE);
 
+  // "/" is the public landing page. Signed-in users skip it and go straight to their rooms.
+  // (Handled here rather than in PUBLIC_PATHS, because every path "starts with" "/".)
+  if (pathname === "/") {
+    return hasSession
+      ? NextResponse.redirect(new URL(DEFAULT_AUTHENTICATED_PATH, request.url))
+      : NextResponse.next();
+  }
+
   // Signed-in users don't need the login/register pages.
   if (hasSession && matches(pathname, GUEST_ONLY_PATHS)) {
     return NextResponse.redirect(new URL(DEFAULT_AUTHENTICATED_PATH, request.url));
@@ -32,7 +40,7 @@ export function proxy(request: NextRequest) {
   // Everything that isn't public requires a session.
   if (!hasSession && !matches(pathname, PUBLIC_PATHS)) {
     const loginUrl = new URL(LOGIN_PATH, request.url);
-    if (pathname !== "/") loginUrl.searchParams.set("next", `${pathname}${search}`);
+    loginUrl.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
 

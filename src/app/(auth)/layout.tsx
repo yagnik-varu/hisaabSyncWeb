@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
     <div className="flex flex-1 flex-col">
       <SkipLink />
       <header className="flex items-center justify-between px-4 py-3 sm:px-6">
-        <Logo href="/login" />
+        <Logo />
         <ThemeToggle />
       </header>
       <main

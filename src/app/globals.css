@@ -48,6 +48,95 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Landing page motion (src/components/landing). Always applied through `motion-safe:` so people
+ * who ask their OS for reduced motion get a still page with the same content.
+ */
+@theme {
+  --animate-rise: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pop: pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-toast: toast var(--toast-duration, 3.2s) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-drop-in: drop-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-fill: fill var(--fill-duration, 3.2s) linear both;
+  --animate-flow: flow 1.2s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-orbit: orbit 80s linear infinite;
+  --animate-orbit-reverse: orbit 80s linear infinite reverse;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+  }
+  @keyframes drop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-14px) scale(0.96);
+    }
+  }
+  /* A phone notification: drops in, stays, then slides away before the next step. */
+  @keyframes toast {
+    0% {
+      opacity: 0;
+      transform: translateY(-14px) scale(0.96);
+    }
+    12%,
+    78% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-14px) scale(0.96);
+    }
+  }
+  @keyframes fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  /* Moves an SVG dash pattern of period 8 (e.g. stroke-dasharray="3 5") along its path. */
+  @keyframes flow {
+    to {
+      stroke-dashoffset: -16;
+    }
+  }
+  @keyframes float {
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/* Faint square grid used behind landing sections (masked with a gradient where it's used). */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 2.75rem 2.75rem;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -124,8 +213,19 @@
   body {
     @apply bg-background text-foreground;
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+  /*
+   * Smooth scrolling for in-page links (landing page nav). Next 16 no longer resets this during
+   * route changes on its own; `data-scroll-behavior="smooth"` on <html> (app/layout.tsx) asks it
+   * to, so page navigations still jump instantly to the top.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
   html {
     @apply font-sans;
@@ -134,7 +234,13 @@
     -webkit-text-size-adjust: 100%;
   }
   /* Faster taps: no double-tap-to-zoom delay on interactive elements. */
-  a, button, [role="button"], input, select, textarea, label {
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  label {
     touch-action: manipulation;
   }
 }

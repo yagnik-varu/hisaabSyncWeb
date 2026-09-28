@@ -56,6 +56,7 @@ On 401 / on page load ──▶ /api/auth/refresh (reads hs_rt cookie) ──▶
 ```
 src/
   app/
+    page.tsx                                            # public landing page (signed-in users → /rooms via proxy.ts)
     (auth)/login/page.tsx, register/page.tsx          # public, centered card layout
     (app)/layout.tsx                                    # auth-gated shell: top bar, notifications bell
     (app)/rooms/page.tsx                                # My Rooms + create/join
@@ -77,6 +78,7 @@ src/
     ui/                  # shadcn generated — do not hand-edit heavily
     shared/              # Money, StatusBadge, EmptyState, DataTable, Pagination, ConfirmDialog, RoleGate
     rooms/ expenses/ contributions/ … (feature components)
+    landing/             # landing page sections (server) + DemoPhone / RoleSwitcher (client islands)
   lib/
     api/client.ts        # fetch wrapper, envelope unwrapping, ApiError, refresh-retry
     api/errors.ts        # normalizeError() — implements the error-code quirk rule
@@ -122,3 +124,5 @@ Screenshots at 390px are verified with a Playwright + Edge script (see PROGRESS.
 | Details | Side sheets become **bottom** sheets on phones (`useIsMobile()`). |
 | Header | Phones: icon logo, room switcher, bell = link to /notifications, avatar menu (Profile, **Theme**, Log out). Desktop: dropdown bell + theme toggle. |
 | Native touches | `InviteButton` uses the Web Share API (WhatsApp etc.) with a copy fallback. `TextField` sets `autoCapitalize/autoCorrect/inputMode/enterKeyHint` per type. `viewport-fit=cover` + safe-area padding. `themeColor`. No tap highlight. `touch-action: manipulation`. |
+| Grids | Mobile grids need an explicit **`grid-cols-1`** (`minmax(0,1fr)`). A bare `grid` uses an `auto` track, so long `truncate`/no-wrap text widens the column past the screen. |
+| Motion (landing) | Keyframes live in `globals.css` (`--animate-rise/toast/fill/flow/float/marquee/orbit`). Always apply them with `motion-safe:`; auto-playing content gets a pause button and doesn't auto-play under reduced motion. Anything timed in JS waits for hydration (`useHydrated` in `demo-phone.tsx`) so CSS and timers stay in sync. |

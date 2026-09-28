@@ -23,7 +23,7 @@ export const DEFAULT_AUTHENTICATED_PATH = "/rooms";
 
 export const LOGIN_PATH = "/login";
 
-/** Pages reachable without a session. */
+/** Pages reachable without a session (plus the "/" landing page, special-cased in src/proxy.ts). */
 export const PUBLIC_PATHS = ["/login", "/register", "/status"] as const;
 
 /** Pages a signed-in user should be bounced away from. */
