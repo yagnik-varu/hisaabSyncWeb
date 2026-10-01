@@ -200,21 +200,33 @@ function PoolDiagram() {
       className="h-auto w-full max-w-60"
     >
       {NODES.map(({ person, x, y }, i) => {
-        // Lines run person → pool, so the dash "flow" moves inward; reversed = paid back out.
+        // The dash "flow" always moves from the line's start to its end, so the direction comes
+        // from the geometry: money in is drawn person → pool, paid back is drawn pool → person.
+        // (Don't use [animation-direction:reverse] here: the `animation` shorthand of
+        // motion-safe:animate-flow comes later in the CSS and resets the direction.)
         const moneyIn = i % 2 === 0;
+        const [from, to] = moneyIn
+          ? [
+              { x, y },
+              { x: CENTER, y: CENTER },
+            ]
+          : [
+              { x: CENTER, y: CENTER },
+              { x, y },
+            ];
         return (
           <line
             key={person.name}
-            x1={x}
-            y1={y}
-            x2={CENTER}
-            y2={CENTER}
+            x1={from.x}
+            y1={from.y}
+            x2={to.x}
+            y2={to.y}
             strokeWidth={2.5}
             strokeDasharray="3 5"
             strokeLinecap="round"
             className={cn(
               "motion-safe:animate-flow",
-              moneyIn ? "stroke-emerald-500" : "stroke-sky-500 [animation-direction:reverse]",
+              moneyIn ? "stroke-emerald-500" : "stroke-sky-500",
             )}
           />
         );
