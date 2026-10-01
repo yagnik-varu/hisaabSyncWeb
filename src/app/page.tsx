@@ -9,6 +9,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeader } from "@/components/landing/landing-header";
 import { PoolVsWeb } from "@/components/landing/pool-vs-web";
 import { Roles } from "@/components/landing/roles";
+import { WakeBackend } from "@/components/landing/wake-backend";
 import { SkipLink } from "@/components/shared/skip-link";
 
 const description =
@@ -27,12 +28,13 @@ export const metadata: Metadata = {
 
 /**
  * Public landing page. Only signed-out visitors see it: src/proxy.ts sends anyone with a session
- * cookie straight to /rooms. It's a static server page; only the demo phone and the role switcher
- * ship JavaScript.
+ * cookie straight to /rooms. It's a static server page; only the demo phone, the role switcher
+ * and the invisible backend wake-up ping ship JavaScript.
  */
 export default function LandingPage() {
   return (
     <>
+      <WakeBackend />
       <SkipLink />
       <LandingHeader />
       <main id="main" tabIndex={-1} className="flex-1 overflow-x-clip outline-none">

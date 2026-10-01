@@ -69,6 +69,7 @@ frame-ancestors 'none'; base-uri 'self'; form-action 'self';
 ## 6. Render free tier cold starts
 
 The backend sleeps after inactivity, and the first request can take ~30–60 s. The frontend handles this:
+- The landing page (`/`) fires one silent `GET /health` on load (`components/landing/wake-backend.tsx`), so the backend is usually awake by the time a visitor reaches login/register.
 - The top banner ("Can't reach the server…") appears on network/502/503/504 errors, pings `/health` every 5 s, and refetches everything when the server is back.
 - Session bootstrap shows a "Can't reach the server → Try again" screen instead of logging users out.
 - `/status` is a public page that shows backend health (handy to wake it up).
