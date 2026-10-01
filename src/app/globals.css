@@ -58,7 +58,7 @@
   --animate-toast: toast var(--toast-duration, 3.2s) cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-drop-in: drop-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-fill: fill var(--fill-duration, 3.2s) linear both;
-  --animate-flow: flow 1.2s linear infinite;
+  --animate-flow: flow var(--flow-duration, 1.2s) linear infinite;
   --animate-float: float 6s ease-in-out infinite;
   --animate-marquee: marquee 40s linear infinite;
   --animate-orbit: orbit 80s linear infinite;

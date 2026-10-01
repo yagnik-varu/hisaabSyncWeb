@@ -27,9 +27,20 @@ const NODES = FLATMATES.map((person, i) => {
 
 type Node = (typeof NODES)[number];
 
-/** Every pair of flatmates (5 people → 10 pairs), drawn as slightly bent curves so it looks tangled. */
+/** Dash speeds for the IOU curves. Uneven on purpose, so the web looks restless next to the pool. */
+const IOU_DURATIONS = ["2.1s", "3.4s", "2.7s"];
+
+/**
+ * Every pair of flatmates (5 people → 10 pairs), drawn as slightly bent curves so it looks tangled.
+ * The dashes flow from a path's start to its end, so some curves are drawn b → a (with the bend
+ * negated, which gives the exact same shape) to make the debts point in mixed directions.
+ */
 const IOU_CURVES = NODES.flatMap((a, i) =>
-  NODES.slice(i + 1).map((b, k) => bentCurve(a, b, (i + k) % 2 === 0 ? 14 : -14)),
+  NODES.slice(i + 1).map((b, k) => {
+    const bend = (i + k) % 2 === 0 ? 14 : -14;
+    const curve = (i + 2 * k) % 3 === 0 ? bentCurve(b, a, -bend) : bentCurve(a, b, bend);
+    return { ...curve, duration: IOU_DURATIONS[(i * 2 + k) % IOU_DURATIONS.length] };
+  }),
 );
 
 function bentCurve(a: Node, b: Node, bend: number) {
@@ -163,11 +174,18 @@ function WebDiagram() {
           d={curve.d}
           fill="none"
           strokeWidth={1.5}
-          className="stroke-rose-500/45 dark:stroke-rose-400/45"
+          strokeDasharray="3 5"
+          strokeLinecap="round"
+          style={{ "--flow-duration": curve.duration } as React.CSSProperties}
+          className="motion-safe:animate-flow stroke-rose-500/60 dark:stroke-rose-400/60"
         />
       ))}
-      {IOU_CURVES.filter((_, i) => i % 3 === 0).map(({ mid }) => (
-        <g key={`${mid.x}-${mid.y}`}>
+      {IOU_CURVES.filter((_, i) => i % 3 === 0).map(({ mid }, i) => (
+        <g
+          key={`${mid.x}-${mid.y}`}
+          style={{ animationDelay: `${i * 0.5}s` }}
+          className="motion-safe:animate-pulse"
+        >
           <circle
             cx={mid.x}
             cy={mid.y}
